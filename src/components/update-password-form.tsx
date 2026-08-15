@@ -64,7 +64,7 @@ export function UpdatePasswordForm({
         password: values.password,
       })
       if (error) throw error
-      router.push('/protected')
+      router.push('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado')
     } finally {

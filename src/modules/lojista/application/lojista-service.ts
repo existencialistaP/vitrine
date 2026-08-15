@@ -38,13 +38,16 @@ export class LojistaService {
 
   async handleVincularAutenticacao(cmd: VincularAutenticacao): Promise<void> {
     const lojista = await this.buscarPorId(LojistaId.fromString(cmd.lojistaId));
+    if (!lojista) throw new LojistaNaoEncontrado(cmd.lojistaId);
     lojista.vincularAutenticacao(AuthUserId.of(cmd.authUserId));
     await this.repository.save(lojista);
   }
 
-  private async buscarPorId(id: LojistaId): Promise<Lojista> {
-    const lojista = await this.repository.findById(id);
-    if (!lojista) throw new LojistaNaoEncontrado(id.toUUID());
-    return lojista;
+  async buscarPorAuthUserId(authUserId: string): Promise<Lojista | null> {
+    return this.repository.findByAuthUserId(AuthUserId.of(authUserId));
+  }
+
+  async buscarPorId(id: LojistaId): Promise<Lojista | null> {
+    return this.repository.findById(id);
   }
 }

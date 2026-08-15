@@ -9,12 +9,15 @@ import { LojistaJaPossuiVitrine } from "../domain/exceptions/lojista-ja-possui-v
 import type { LojaRepository } from "../domain/loja-repository";
 import { Loja } from "../domain/loja";
 import { Produto } from "../domain/produto";
+import { Categoria } from "../domain/categoria";
 import { NomeLoja } from "../domain/vos/nome-loja";
 import { NomeProduto } from "../domain/vos/nome-produto";
+import { NomeCategoria } from "../domain/vos/nome-categoria";
 import { Descricao } from "../domain/vos/descricao";
 import { Slug } from "../domain/vos/slug";
 import { Whatsapp } from "../domain/vos/whatsapp";
 import { Preco } from "../domain/vos/preco";
+import { Ordem } from "../domain/vos/ordem";
 import { Url } from "../domain/vos/url";
 import { IdentidadeVisual } from "../domain/vos/identidade-visual";
 import { CorHex } from "../domain/vos/cor-hex";
@@ -26,6 +29,11 @@ import { AtualizarProduto } from "./commands/atualizar-produto";
 import { RemoverProduto } from "./commands/remover-produto";
 import { AlterarDisponibilidade } from "./commands/alterar-disponibilidade";
 import { AlterarTema } from "./commands/alterar-tema";
+import { AdicionarCategoria } from "./commands/adicionar-categoria";
+import { RenomearCategoria } from "./commands/renomear-categoria";
+import { ReposicionarCategoria } from "./commands/reposicionar-categoria";
+import { RemoverCategoria } from "./commands/remover-categoria";
+import { AlterarDadosLoja } from "./commands/alterar-dados-loja";
 
 /**
  * Serviço de aplicação da vitrine. Orquestra o agregado {@link Loja}, aplica as
@@ -44,6 +52,11 @@ export class LojaService {
   async handle(cmd: RemoverProduto): Promise<void>;
   async handle(cmd: AlterarDisponibilidade): Promise<void>;
   async handle(cmd: AlterarTema): Promise<void>;
+  async handle(cmd: AdicionarCategoria): Promise<void>;
+  async handle(cmd: RenomearCategoria): Promise<void>;
+  async handle(cmd: ReposicionarCategoria): Promise<void>;
+  async handle(cmd: RemoverCategoria): Promise<void>;
+  async handle(cmd: AlterarDadosLoja): Promise<void>;
   async handle(
     cmd:
       | CriarLoja
@@ -52,13 +65,23 @@ export class LojaService {
       | RemoverProduto
       | AlterarDisponibilidade
       | AlterarTema
+      | AdicionarCategoria
+      | RenomearCategoria
+      | ReposicionarCategoria
+      | RemoverCategoria
+      | AlterarDadosLoja
   ): Promise<LojaId | ProdutoId | void> {
     if (cmd instanceof CriarLoja) return this.criarLoja(cmd);
     if (cmd instanceof AdicionarProduto) return this.adicionarProduto(cmd);
     if (cmd instanceof AtualizarProduto) return this.atualizarProduto(cmd);
     if (cmd instanceof RemoverProduto) return this.removerProduto(cmd);
     if (cmd instanceof AlterarDisponibilidade) return this.alterarDisponibilidade(cmd);
-    return this.alterarTema(cmd);
+    if (cmd instanceof AlterarTema) return this.alterarTema(cmd);
+    if (cmd instanceof AdicionarCategoria) return this.adicionarCategoria(cmd);
+    if (cmd instanceof RenomearCategoria) return this.renomearCategoria(cmd);
+    if (cmd instanceof ReposicionarCategoria) return this.reposicionarCategoria(cmd);
+    if (cmd instanceof RemoverCategoria) return this.removerCategoria(cmd);
+    return this.alterarDadosLoja(cmd);
   }
 
   private async criarLoja(cmd: CriarLoja): Promise<LojaId> {
@@ -158,10 +181,68 @@ export class LojaService {
     await this.persistir(loja);
   }
 
+  private async alterarDadosLoja(cmd: AlterarDadosLoja): Promise<void> {
+    const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
+
+    loja.alterarDados({
+      nome: cmd.nome !== undefined ? NomeLoja.of(cmd.nome) : undefined,
+      descricao: cmd.descricao !== undefined ? Descricao.of(cmd.descricao) : undefined,
+      whatsapp: cmd.whatsapp !== undefined ? Whatsapp.of(cmd.whatsapp) : undefined,
+    });
+
+    if (cmd.status === "ATIVA") loja.ativar();
+    if (cmd.status === "INATIVA") loja.inativar();
+
+    await this.persistir(loja);
+  }
+
+  private async adicionarCategoria(cmd: AdicionarCategoria): Promise<void> {
+    const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
+    loja.adicionarCategoria(
+      Categoria.of({
+        id: CategoriaId.random(),
+        nome: NomeCategoria.of(cmd.nome),
+      })
+    );
+    await this.persistir(loja);
+  }
+
+  private async renomearCategoria(cmd: RenomearCategoria): Promise<void> {
+    const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
+    loja.renomearCategoria(
+      CategoriaId.fromString(cmd.categoriaId),
+      NomeCategoria.of(cmd.nome)
+    );
+    await this.persistir(loja);
+  }
+
+  private async reposicionarCategoria(cmd: ReposicionarCategoria): Promise<void> {
+    const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
+    loja.reposicionarCategoria(
+      CategoriaId.fromString(cmd.categoriaId),
+      Ordem.of(cmd.ordem)
+    );
+    await this.persistir(loja);
+  }
+
+  private async removerCategoria(cmd: RemoverCategoria): Promise<void> {
+    const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
+    loja.removerCategoria(CategoriaId.fromString(cmd.categoriaId));
+    await this.persistir(loja);
+  }
+
   async buscarPorSlug(slug: string): Promise<Loja> {
     const loja = await this.repository.findBySlug(Slug.of(slug));
     if (!loja) throw new LojaNaoEncontrada(`slug "${slug}"`);
     return loja;
+  }
+
+  async buscarPorLojistaId(lojistaId: string): Promise<Loja | null> {
+    return this.repository.findByLojistaId(LojistaId.fromString(lojistaId));
+  }
+
+  async slugDisponivel(slug: string): Promise<boolean> {
+    return !(await this.repository.existsBySlug(Slug.of(slug)));
   }
 
   private async buscarPorId(id: LojaId): Promise<Loja> {

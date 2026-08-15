@@ -43,7 +43,7 @@ valores arbitrários** (`bg-[#172033]`, `rounded-[13px]`, `px-[19px]`).
 ### Cores semânticas
 
 `background` `foreground` `card` `popover` `primary` `secondary` `muted`
-`accent` `destructive` `border` `input` `ring` `chart-1..5` `sidebar*`
+`accent` `destructive` `success` `border` `input` `ring` `chart-1..5` `sidebar*`
 
 Regras:
 
@@ -144,6 +144,19 @@ Schema `zod` no mesmo arquivo ou em `lib/validations`. `useForm` +
 Cada aba é um `Card` com `CardHeader/CardTitle/CardDescription` +
 `FieldGroup` de forms; ações no `CardFooter`. Feedback de sucesso via
 `toast.add({ type: 'success' })`, erro via `Alert` destrutivo.
+
+### Painel (dashboard)
+
+`SidebarProvider` + `AppSidebar` + `SidebarInset` em `app/dashboard/layout.tsx`.
+Cada página tem `PageHeader` (título, descrição, ações) + conteúdo.
+O sidebar agrupa: Visão geral, Produtos, Categorias, Aparência, Configurações
+e um atalho "Ver vitrine". Em mobile, vira `Sheet`.
+
+### Onboarding
+
+Página única (`/dashboard/onboarding`) exibida quando o lojista não tem vitrine.
+Form com validação de slug em tempo real (`verificarSlugAction`) e CTAs da
+landing apontando para cá após login.
 
 ### CRUD
 

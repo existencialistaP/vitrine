@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,11 +20,15 @@ export const metadata: Metadata = {
     "Simplificando a criação de lojas online para pequenos negócios.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${geistMono.variable}`}>
       <body>
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
       </body>
     </html>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +32,10 @@ export default function Home() {
           direto no WhatsApp. Autonomia total, por um custo acessível.
         </p>
         <div className="flex gap-3">
-          <Button size="lg">Criar minha vitrine</Button>
-          <Button size="lg" variant="outline">
+          <Button size="lg" render={<Link href="/auth/sign-up" />}>
+            Criar minha vitrine
+          </Button>
+          <Button size="lg" variant="outline" render={<Link href="/doce-e-tal" />}>
             Ver exemplo
           </Button>
         </div>
