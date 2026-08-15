@@ -3,10 +3,33 @@
   "mcp": {
     "stitch": {
       "type": "local",
-      "command": ["npx", "-y", "@_davideast/stitch-mcp", "proxy"],
+      "command": [
+        "npx",
+        "-y",
+        "@_davideast/stitch-mcp",
+        "proxy"
+      ],
       "enabled": true,
       "env": {
         "STITCH_API_KEY": "{env:STITCH_API_KEY}"
+      }
+    },
+    "shadcn": {
+      "type": "local",
+      "command": [
+        "npx",
+        "shadcn@latest",
+        "mcp"
+      ],
+      "enabled": true
+    },
+    "21st": {
+      "type": "remote",
+      "url": "https://21st.dev/api/mcp",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "x-api-key": "{env:API_KEY_21ST}"
       }
     }
   }

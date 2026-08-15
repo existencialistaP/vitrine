@@ -46,3 +46,20 @@ Acesse [http://localhost:3000](http://localhost:3000).
 | `npm run test`         | Testes (Vitest)                        |
 | `npm run prisma:push`  | Aplica o schema ao banco               |
 | `npm run prisma:generate` | Gera o client Prisma local         |
+| `npm run registry:build` | Regenera o registry `@vitrine` em `public/r` |
+
+## Design System
+
+Consulte `docs/design/PRINCIPLES.md` (fonte de verdade) e o skill `shadcn` em
+`.agents/skills/shadcn/SKILL.md` antes de criar qualquer interface.
+
+- **Tokens**: definidos em `src/app/globals.css` (oklch, claro + escuro). Não
+  usar valores arbitrários (`bg-[#...]`, `rounded-[13px]`).
+- **Componentes**: `src/components/ui` (primitives), `layout` (estruturas),
+  `patterns` (estados recorrentes), `features` (domínio).
+- **Forms**: react-hook-form + zod + `FieldGroup`/`Field`.
+- **Registry próprio `@vitrine`**: `registry.json` na raiz; build em `public/r`
+  (regenerar com `npm run registry:build`). Após push, é consumível via
+  `npx shadcn search @vitrine` / `npx shadcn add @vitrine/<item>`.
+- **MCPs**: shadcn (local) e 21st.dev (remoto) em `opencode.json`. O 21st
+  precisa de `API_KEY_21ST` (veja `.env.example`).

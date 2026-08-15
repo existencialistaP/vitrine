@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "loading-state",
+  "title": "Loading State",
+  "description": "Placeholder de carregamento com skeletons.",
+  "registryDependencies": [
+    "skeleton"
+  ],
+  "files": [
+    {
+      "path": "src/components/patterns/loading-state.tsx",
+      "content": "import * as React from \"react\"\n\nimport { cn } from \"@/lib/utils\"\nimport { Skeleton } from \"@/components/ui/skeleton\"\n\nfunction LoadingState({\n  className,\n  rows = 3,\n  ...props\n}: React.ComponentProps<\"div\"> & { rows?: number }) {\n  return (\n    <div\n      className={cn(\"flex w-full flex-col gap-4\", className)}\n      aria-busy=\"true\"\n      aria-label=\"Carregando\"\n      {...props}\n    >\n      {Array.from({ length: rows }).map((_, index) => (\n        <Skeleton key={index} className=\"h-20 w-full\" />\n      ))}\n    </div>\n  )\n}\n\nexport { LoadingState }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

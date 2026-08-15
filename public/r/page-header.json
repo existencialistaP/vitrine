@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "page-header",
+  "title": "Page Header",
+  "description": "Breadcrumb, título, descrição e ações para cabeçalho de página.",
+  "registryDependencies": [
+    "breadcrumb",
+    "button"
+  ],
+  "files": [
+    {
+      "path": "src/components/layout/page-header.tsx",
+      "content": "import * as React from \"react\"\nimport Link from \"next/link\"\n\nimport { cn } from \"@/lib/utils\"\nimport {\n  Breadcrumb,\n  BreadcrumbItem,\n  BreadcrumbLink,\n  BreadcrumbList,\n  BreadcrumbPage,\n  BreadcrumbSeparator,\n} from \"@/components/ui/breadcrumb\"\n\ntype PageHeaderCrumb = {\n  label: string\n  href?: string\n}\n\nfunction PageHeader({ className, ...props }: React.ComponentProps<\"div\">) {\n  return (\n    <div\n      data-slot=\"page-header\"\n      className={cn(\n        \"flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between\",\n        className\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction PageHeaderBreadcrumb({\n  crumbs,\n  className,\n  ...props\n}: React.ComponentProps<typeof Breadcrumb> & { crumbs: PageHeaderCrumb[] }) {\n  return (\n    <Breadcrumb className={cn(className)} {...props}>\n      <BreadcrumbList>\n        {crumbs.map((crumb, index) => {\n          const isLast = index === crumbs.length - 1\n          return (\n            <React.Fragment key={crumb.label}>\n              {index > 0 && <BreadcrumbSeparator />}\n              <BreadcrumbItem>\n                {isLast || !crumb.href ? (\n                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>\n                ) : (\n                  <BreadcrumbLink render={<Link href={crumb.href} />}>\n                    {crumb.label}\n                  </BreadcrumbLink>\n                )}\n              </BreadcrumbItem>\n            </React.Fragment>\n          )\n        })}\n      </BreadcrumbList>\n    </Breadcrumb>\n  )\n}\n\nfunction PageHeaderContent({\n  className,\n  ...props\n}: React.ComponentProps<\"div\">) {\n  return (\n    <div\n      data-slot=\"page-header-content\"\n      className={cn(\"flex min-w-0 flex-col gap-1\", className)}\n      {...props}\n    />\n  )\n}\n\nfunction PageHeaderTitle({ className, ...props }: React.ComponentProps<\"h1\">) {\n  return (\n    <h1\n      data-slot=\"page-header-title\"\n      className={cn(\n        \"font-heading text-xl font-semibold tracking-tight sm:text-2xl\",\n        className\n      )}\n      {...props}\n    />\n  )\n}\n\nfunction PageHeaderDescription({\n  className,\n  ...props\n}: React.ComponentProps<\"p\">) {\n  return (\n    <p\n      data-slot=\"page-header-description\"\n      className={cn(\"text-sm text-muted-foreground\", className)}\n      {...props}\n    />\n  )\n}\n\nfunction PageHeaderActions({\n  className,\n  ...props\n}: React.ComponentProps<\"div\">) {\n  return (\n    <div\n      data-slot=\"page-header-actions\"\n      className={cn(\"flex shrink-0 items-center gap-2\", className)}\n      {...props}\n    />\n  )\n}\n\nexport {\n  PageHeader,\n  PageHeaderBreadcrumb,\n  PageHeaderContent,\n  PageHeaderTitle,\n  PageHeaderDescription,\n  PageHeaderActions,\n}\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

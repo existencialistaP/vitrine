@@ -44,8 +44,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# arquivos e skills de agentes de IA (não fazem parte do projeto)
-AGENTS.md
+# skills de agentes de IA (não fazem parte do projeto)
 CLAUDE.md
 .agents/
 skills-lock.json
+
+# AGENTS.md é versionado — contém as regras de UI do projeto.

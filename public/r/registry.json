@@ -1,0 +1,72 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "vitrine",
+  "homepage": "https://github.com/existencialistaP/vitrine",
+  "items": [
+    {
+      "name": "page-header",
+      "type": "registry:ui",
+      "title": "Page Header",
+      "description": "Breadcrumb, título, descrição e ações para cabeçalho de página.",
+      "registryDependencies": ["breadcrumb", "button"],
+      "files": [
+        {
+          "path": "src/components/layout/page-header.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "app-header",
+      "type": "registry:ui",
+      "title": "App Header",
+      "description": "Cabeçalho da aplicação com logo e ações de conta.",
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "src/components/layout/app-header.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "empty-state",
+      "type": "registry:ui",
+      "title": "Empty State",
+      "description": "Estado vazio com ícone, título, descrição e ação.",
+      "registryDependencies": ["empty"],
+      "files": [
+        {
+          "path": "src/components/patterns/empty-state.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "loading-state",
+      "type": "registry:ui",
+      "title": "Loading State",
+      "description": "Placeholder de carregamento com skeletons.",
+      "registryDependencies": ["skeleton"],
+      "files": [
+        {
+          "path": "src/components/patterns/loading-state.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "error-state",
+      "type": "registry:ui",
+      "title": "Error State",
+      "description": "Estado de erro com alerta e ação de tentar novamente.",
+      "registryDependencies": ["alert", "button"],
+      "files": [
+        {
+          "path": "src/components/patterns/error-state.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "app-header",
+  "title": "App Header",
+  "description": "Cabeçalho da aplicação com logo e ações de conta.",
+  "registryDependencies": [
+    "button"
+  ],
+  "files": [
+    {
+      "path": "src/components/layout/app-header.tsx",
+      "content": "import { Store } from \"lucide-react\"\nimport Link from \"next/link\"\n\nimport { LogoutButton } from \"@/components/logout-button\"\n\nfunction AppHeader() {\n  return (\n    <header className=\"border-b border-border\">\n      <div className=\"mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6\">\n        <Link href=\"/protected\" className=\"flex items-center gap-2\">\n          <div className=\"inline-flex size-8 items-center justify-center rounded-lg bg-primary\">\n            <Store className=\"size-4 text-primary-foreground\" />\n          </div>\n          <span className=\"font-heading font-semibold tracking-tight\">Vitrine</span>\n        </Link>\n        <LogoutButton />\n      </div>\n    </header>\n  )\n}\n\nexport { AppHeader }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

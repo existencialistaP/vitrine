@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "empty-state",
+  "title": "Empty State",
+  "description": "Estado vazio com ícone, título, descrição e ação.",
+  "registryDependencies": [
+    "empty"
+  ],
+  "files": [
+    {
+      "path": "src/components/patterns/empty-state.tsx",
+      "content": "import * as React from \"react\"\n\nimport {\n  Empty,\n  EmptyContent,\n  EmptyDescription,\n  EmptyHeader,\n  EmptyMedia,\n  EmptyTitle,\n} from \"@/components/ui/empty\"\n\nfunction EmptyState({\n  icon: Icon,\n  title,\n  description,\n  action,\n  className,\n  ...props\n}: {\n  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>\n  title: string\n  description?: React.ReactNode\n  action?: React.ReactNode\n} & React.ComponentProps<\"div\">) {\n  return (\n    <Empty className={className} {...props}>\n      <EmptyHeader>\n        {Icon && (\n          <EmptyMedia variant=\"icon\">\n            <Icon aria-hidden=\"true\" />\n          </EmptyMedia>\n        )}\n        <EmptyContent>\n          <EmptyTitle>{title}</EmptyTitle>\n          {description && <EmptyDescription>{description}</EmptyDescription>}\n          {action}\n        </EmptyContent>\n      </EmptyHeader>\n    </Empty>\n  )\n}\n\nexport { EmptyState }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}

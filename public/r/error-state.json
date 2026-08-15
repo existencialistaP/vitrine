@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "error-state",
+  "title": "Error State",
+  "description": "Estado de erro com alerta e ação de tentar novamente.",
+  "registryDependencies": [
+    "alert",
+    "button"
+  ],
+  "files": [
+    {
+      "path": "src/components/patterns/error-state.tsx",
+      "content": "import * as React from \"react\"\nimport { TriangleAlertIcon } from \"lucide-react\"\n\nimport { cn } from \"@/lib/utils\"\nimport {\n  Alert,\n  AlertAction,\n  AlertDescription,\n  AlertTitle,\n} from \"@/components/ui/alert\"\nimport { Button } from \"@/components/ui/button\"\n\nfunction ErrorState({\n  title = \"Algo deu errado\",\n  description,\n  onRetry,\n  className,\n  ...props\n}: {\n  title?: string\n  description?: React.ReactNode\n  onRetry?: () => void\n} & React.ComponentProps<\"div\">) {\n  return (\n    <Alert variant=\"destructive\" className={cn(\"w-full\", className)} {...props}>\n      <TriangleAlertIcon aria-hidden=\"true\" />\n      <AlertTitle>{title}</AlertTitle>\n      {description && <AlertDescription>{description}</AlertDescription>}\n      {onRetry && (\n        <AlertAction>\n          <Button variant=\"outline\" size=\"sm\" onClick={onRetry}>\n            Tentar novamente\n          </Button>\n        </AlertAction>\n      )}\n    </Alert>\n  )\n}\n\nexport { ErrorState }\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}
