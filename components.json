@@ -23,6 +23,6 @@
   "menuAccent": "subtle",
   "registries": {
     "@supabase": "https://supabase.com/ui/r/{name}.json",
-    "@vitrine": "https://raw.githubusercontent.com/existencialistaP/vitrine/main/r/{name}.json"
+    "@vitrine": "https://raw.githubusercontent.com/existencialistaP/vitrine/main/public/r/{name}.json"
   }
 }
