@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StatusLoja {
+  ATIVA
+  INATIVA
+}
+
+/// Identidade do lojista (dono da vitrine). Vinculado ao Supabase Auth via authUserId.
+model Usuario {
+  id         String   @id @default(uuid())
+  authUserId String?  @unique
+  nome       String
+  email      String   @unique
+  telefone   String?
+  criadoEm   DateTime @default(now())
+
+  loja Loja?
+
+  @@map("usuarios")
+}
+
+/// Vitrine: agregado central. Cada lojista possui exatamente uma loja.
+model Loja {
+  id        String   @id @default(uuid())
+  lojistaId String   @unique
+  lojista   Usuario  @relation(fields: [lojistaId], references: [id], onDelete: Cascade)
+
+  nome              String
+  slug              String    @unique
+  descricao         String?
+  whatsapp          String
+  status            StatusLoja @default(ATIVA)
+
+  /// Identidade visual embutida (padrão @Embedded do JPA)
+  temaCorPrimaria   String?
+  temaCorSecundaria String?
+  temaCorFundo      String?
+  temaFonte         String?
+  temaLogoUrl       String?
+
+  /// Lock otimista (espelho do @Version)
+  versao      Int      @default(1)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  produtos   Produto[]
+  categorias Categoria[]
+
+  @@index([lojistaId])
+  @@index([slug])
+  @@map("lojas")
+}
+
+model Categoria {
+  id     String  @id @default(uuid())
+  lojaId String
+  loja   Loja    @relation(fields: [lojaId], references: [id], onDelete: Cascade)
+
+  nome  String
+  ordem Int    @default(0)
+
+  produtos Produto[]
+
+  @@unique([lojaId, nome])
+  @@index([lojaId])
+  @@map("categorias")
+}
+
+model Produto {
+  id          String   @id @default(uuid())
+  lojaId      String
+  loja        Loja      @relation(fields: [lojaId], references: [id], onDelete: Cascade)
+  categoriaId String?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+
+  nome       String
+  descricao  String?
+  precoCents Int      @default(0)
+  imagemUrl  String?
+  disponivel Boolean  @default(true)
+  ordem      Int      @default(0)
+
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([lojaId])
+  @@index([categoriaId])
+  @@map("produtos")
+}
