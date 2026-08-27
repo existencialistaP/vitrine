@@ -32,7 +32,7 @@ export default async function DashboardLayout({
         lojaNome={loja?.getNome().getValue()}
       />
       <SidebarInset>
-        <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
+        <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur transition-[width,height] ease-linear">
           <div className="flex flex-1 items-center gap-2 px-4 lg:px-6">
             <SidebarTrigger className="-ml-1" />
             <Separator

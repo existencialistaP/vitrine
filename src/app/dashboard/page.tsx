@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   return (
     <>
       {/* Welcome section */}
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-primary/5 via-primary/[3%] to-background p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm sm:p-8">
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1">
             <h1 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
@@ -66,7 +66,6 @@ export default async function DashboardPage() {
             </Button>
           </div>
         </div>
-        <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-primary/5 blur-3xl" aria-hidden="true" />
       </div>
 
       {/* Stat cards */}
