@@ -23,8 +23,7 @@ import { Slug } from "@/modules/loja/domain/vos/slug";
 import { Whatsapp } from "@/modules/loja/domain/vos/whatsapp";
 import { Preco } from "@/modules/loja/domain/vos/preco";
 import { Ordem } from "@/modules/loja/domain/vos/ordem";
-import { CorHex } from "@/modules/loja/domain/vos/cor-hex";
-import { IdentidadeVisual } from "@/modules/loja/domain/vos/identidade-visual";
+import { IdentidadeVisual, Paleta } from "@/modules/loja/domain/vos/identidade-visual";
 import { DisponibilidadeValue } from "@/modules/loja/domain/vos/disponibilidade";
 
 function criarLoja(): Loja {
@@ -130,11 +129,11 @@ describe("Loja (agregado)", () => {
 
   it("altera tema e registra TemaAlterado", () => {
     const loja = criarLoja();
-    const novo = IdentidadeVisual.padrao().withCorPrimaria(CorHex.of("#000000"));
+    const novo = IdentidadeVisual.padrao().withPaleta(Paleta.BLUSH);
 
     loja.alterarTema(novo);
 
-    expect(loja.getTema().getCorPrimaria().getValue()).toBe("#000000");
+    expect(loja.getTema().getPaleta()).toBe("BLUSH");
     expect(loja.pullDomainEvents().some((e) => e instanceof TemaAlterado)).toBe(true);
   });
 

@@ -50,3 +50,7 @@ CLAUDE.md
 skills-lock.json
 
 # AGENTS.md é versionado — contém as regras de UI do projeto.
+
+# documentos de negócio (não fazem parte do código)
+*.xlsx
+*.docx

@@ -22,12 +22,12 @@ export default async function CategoriasPage() {
         <PageHeaderContent>
           <PageHeaderTitle>Categorias</PageHeaderTitle>
           <PageHeaderDescription>
-            Organize seus produtos em grupos.
+            Organize seus produtos em grupos para facilitar a navegação dos clientes.
           </PageHeaderDescription>
         </PageHeaderContent>
       </PageHeader>
 
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="max-w-2xl">
         <CategoriasManager categorias={categorias} />
       </div>
     </>

@@ -144,10 +144,11 @@ export async function alterarDisponibilidadeAction(
 }
 
 export async function alterarTemaAction(input: {
-  corPrimaria: string
-  corSecundaria: string
-  corFundo: string
-  fonte?: "SANS" | "SERIF" | "MONO"
+  paleta?: string
+  estilo?: string
+  formatoCard?: string
+  layout?: string
+  fonte?: "SANS" | "MANROPE" | "SERIF" | "DISPLAY" | "MONO"
   logoUrl?: string | null
 }): Promise<ActionState> {
   const loja = await requireMinhaLoja()

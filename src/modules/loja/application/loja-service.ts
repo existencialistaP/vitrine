@@ -20,8 +20,6 @@ import { Preco } from "../domain/vos/preco";
 import { Ordem } from "../domain/vos/ordem";
 import { Url } from "../domain/vos/url";
 import { IdentidadeVisual } from "../domain/vos/identidade-visual";
-import { CorHex } from "../domain/vos/cor-hex";
-import { parseFonte } from "../domain/vos/fonte";
 import { DisponibilidadeValue } from "../domain/vos/disponibilidade";
 import { CriarLoja } from "./commands/criar-loja";
 import { AdicionarProduto } from "./commands/adicionar-produto";
@@ -170,11 +168,12 @@ export class LojaService {
     const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
 
     const tema = IdentidadeVisual.of({
-      corPrimaria: CorHex.of(cmd.corPrimaria),
-      corSecundaria: CorHex.of(cmd.corSecundaria),
-      corFundo: CorHex.of(cmd.corFundo),
-      fonte: parseFonte(cmd.fonte),
-      logoUrl: cmd.logoUrl !== null ? Url.of(cmd.logoUrl) : null,
+      paleta: cmd.paleta,
+      estilo: cmd.estilo,
+      formatoCard: cmd.formatoCard,
+      layout: cmd.layout,
+      fonte: cmd.fonte,
+      logoUrl: cmd.logoUrl !== null ? Url.of(cmd.logoUrl!) : null,
     });
 
     loja.alterarTema(tema);

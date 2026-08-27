@@ -1,52 +1,56 @@
 import { describe, it, expect } from "vitest";
-import { IdentidadeVisual } from "@/modules/loja/domain/vos/identidade-visual";
-import { CorHex } from "@/modules/loja/domain/vos/cor-hex";
-import { CorHexInvalida } from "@/modules/loja/domain/exceptions/cor-hex-invalida";
+import {
+  IdentidadeVisual,
+  Paleta,
+  Estilo,
+  FormatoCard,
+  Layout,
+} from "@/modules/loja/domain/vos/identidade-visual";
 import { Fonte } from "@/modules/loja/domain/vos/fonte";
-
-describe("CorHex", () => {
-  it("normaliza #RGB para #RRGGBB", () => {
-    expect(CorHex.of("#f00").getValue()).toBe("#FF0000");
-  });
-
-  it("rejeita formato inválido", () => {
-    expect(() => CorHex.of("vermelho")).toThrow(CorHexInvalida);
-    expect(() => CorHex.of("#GGGGGG")).toThrow(CorHexInvalida);
-  });
-});
 
 describe("IdentidadeVisual", () => {
   it("cria tema padrão", () => {
     const tema = IdentidadeVisual.padrao();
-    expect(tema.getCorPrimaria().getValue()).toBe("#1D4ED8");
+    expect(tema.getPaleta()).toBe(Paleta.OCEANO);
+    expect(tema.getEstilo()).toBe(Estilo.CLASSICO);
+    expect(tema.getFormatoCard()).toBe(FormatoCard.QUADRADO);
+    expect(tema.getLayout()).toBe(Layout.GRADE_DENSA);
     expect(tema.getFonte()).toBe(Fonte.SANS);
     expect(tema.getLogoUrl()).toBeNull();
   });
 
   it("mantém imutabilidade: with* retorna nova instância", () => {
     const tema = IdentidadeVisual.padrao();
-    const alterado = tema.withCorPrimaria(CorHex.of("#00FF00"));
+    const alterado = tema.withPaleta(Paleta.BLUSH);
 
-    expect(alterado.getCorPrimaria().getValue()).toBe("#00FF00");
-    expect(tema.getCorPrimaria().getValue()).toBe("#1D4ED8");
+    expect(alterado.getPaleta()).toBe(Paleta.BLUSH);
+    expect(tema.getPaleta()).toBe(Paleta.OCEANO);
     expect(alterado.equals(tema)).toBe(false);
   });
 
   it("compara por valor completo", () => {
     const a = IdentidadeVisual.of({
-      corPrimaria: CorHex.of("#111111"),
-      corSecundaria: CorHex.of("#222222"),
-      corFundo: CorHex.of("#333333"),
+      paleta: "terrA",
+      estilo: "moderno",
+      formatoCard: "retrato",
+      layout: "lista",
       fonte: Fonte.MONO,
       logoUrl: null,
     });
     const b = IdentidadeVisual.of({
-      corPrimaria: CorHex.of("#111111"),
-      corSecundaria: CorHex.of("#222222"),
-      corFundo: CorHex.of("#333333"),
+      paleta: Paleta.TERRA,
+      estilo: Estilo.MODERNO,
+      formatoCard: FormatoCard.RETRATO,
+      layout: Layout.LISTA,
       fonte: Fonte.MONO,
       logoUrl: null,
     });
     expect(a.equals(b)).toBe(true);
+  });
+
+  it("rejeita combo desconhecido", () => {
+    expect(() =>
+      IdentidadeVisual.of({ paleta: "MARCIANO" as never })
+    ).toThrow();
   });
 });

@@ -3,7 +3,9 @@ import { InvalidDomainError } from "@/kernel/errors/domain-error";
 /** Tipografia da identidade visual. */
 export const Fonte = {
   SANS: "SANS",
+  MANROPE: "MANROPE",
   SERIF: "SERIF",
+  DISPLAY: "DISPLAY",
   MONO: "MONO",
 } as const;
 

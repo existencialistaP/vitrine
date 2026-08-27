@@ -17,16 +17,17 @@ export default async function AparenciaPage() {
         <PageHeaderContent>
           <PageHeaderTitle>Aparência</PageHeaderTitle>
           <PageHeaderDescription>
-            Personalize a identidade visual da sua vitrine.
+            Escolha um visual predefinido para a sua vitrine — cores, fonte, layout e formato dos cards.
           </PageHeaderDescription>
         </PageHeaderContent>
       </PageHeader>
 
       <TemaForm
         tema={{
-          corPrimaria: tema.getCorPrimaria().getValue(),
-          corSecundaria: tema.getCorSecundaria().getValue(),
-          corFundo: tema.getCorFundo().getValue(),
+          paleta: tema.getPaleta(),
+          estilo: tema.getEstilo(),
+          formatoCard: tema.getFormatoCard(),
+          layout: tema.getLayout(),
           fonte: tema.getFonte(),
           logoUrl: tema.getLogoUrl()?.getValue() ?? null,
         }}

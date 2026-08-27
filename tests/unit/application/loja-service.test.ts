@@ -197,15 +197,17 @@ describe("LojaService (aplicação)", () => {
     await service.handle(
       AlterarTema.from({
         lojaId: lojaId.toUUID(),
-        corPrimaria: "#000000",
-        corSecundaria: "#00FF00",
-        corFundo: "#FFFFFF",
+        paleta: "BLUSH",
+        estilo: "MODERNO",
+        formatoCard: "RETRATO",
+        layout: "LISTA",
         fonte: "SANS",
       })
     );
 
     const loja = await repository.findById(lojaId);
-    expect(loja?.getTema().getCorPrimaria().getValue()).toBe("#000000");
+    expect(loja?.getTema().getPaleta()).toBe("BLUSH");
+    expect(loja?.getTema().getLayout()).toBe("LISTA");
   });
 
   it("valida comando inválido na fronteira", () => {

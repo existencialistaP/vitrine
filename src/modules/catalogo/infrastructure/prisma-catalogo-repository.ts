@@ -11,7 +11,6 @@ import { Whatsapp } from "@/modules/loja/domain/vos/whatsapp";
 import { Preco } from "@/modules/loja/domain/vos/preco";
 import { Ordem } from "@/modules/loja/domain/vos/ordem";
 import { Url } from "@/modules/loja/domain/vos/url";
-import { CorHex } from "@/modules/loja/domain/vos/cor-hex";
 import { Fonte, parseFonte } from "@/modules/loja/domain/vos/fonte";
 import { IdentidadeVisual } from "@/modules/loja/domain/vos/identidade-visual";
 import type { CatalogoRepository } from "../application/catalogo-repository";
@@ -71,9 +70,10 @@ export class PrismaCatalogoRepository implements CatalogoRepository {
       descricao: Descricao.of(linha.descricao ?? ""),
       whatsapp: Whatsapp.of(linha.whatsapp),
       tema: IdentidadeVisual.of({
-        corPrimaria: CorHex.of(linha.temaCorPrimaria ?? "#1D4ED8"),
-        corSecundaria: CorHex.of(linha.temaCorSecundaria ?? "#F59E0B"),
-        corFundo: CorHex.of(linha.temaCorFundo ?? "#FFFFFF"),
+        paleta: linha.temaPaleta,
+        estilo: linha.temaEstilo,
+        formatoCard: linha.temaFormatoCard,
+        layout: linha.temaLayout,
         fonte: parseFonte(linha.temaFonte) ?? Fonte.SANS,
         logoUrl: linha.temaLogoUrl !== null ? Url.of(linha.temaLogoUrl) : null,
       }),

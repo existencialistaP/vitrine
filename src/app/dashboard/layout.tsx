@@ -1,4 +1,7 @@
+import Link from 'next/link'
+
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { Separator } from '@/components/ui/separator'
 import {
   SidebarInset,
   SidebarProvider,
@@ -15,13 +18,32 @@ export default async function DashboardLayout({
   const loja = await getMinhaLoja()
 
   return (
-    <SidebarProvider>
-      <AppSidebar slug={loja?.getSlug().getValue()} />
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar
+        variant="inset"
+        slug={loja?.getSlug().getValue()}
+        lojaNome={loja?.getNome().getValue()}
+      />
       <SidebarInset>
-        <header className="flex h-14 items-center gap-2 border-b border-border px-4">
-          <SidebarTrigger />
+        <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
+          <div className="flex flex-1 items-center gap-2 px-4 lg:px-6">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+          </div>
         </header>
-        <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">{children}</div>
+        <div className="flex flex-1 flex-col gap-6 p-4 pt-6 lg:p-6 lg:pt-6">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

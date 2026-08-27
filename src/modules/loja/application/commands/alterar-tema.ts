@@ -1,11 +1,28 @@
 import { z } from "zod";
+import {
+  Estilo,
+  FormatoCard,
+  Layout,
+  Paleta,
+} from "../../domain/vos/identidade-visual";
+import { Fonte } from "../../domain/vos/fonte";
+
+const IdOpcao = (opcoes: readonly string[], mensagem: string) =>
+  z
+    .string()
+    .transform((v) => v.toUpperCase())
+    .refine((v) => opcoes.includes(v), { message: mensagem });
 
 const AlterarTemaSchema = z.object({
   lojaId: z.string().uuid("lojaId deve ser um UUID"),
-  corPrimaria: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "corPrimaria deve ser hexadecimal (#RGB/#RRGGBB)"),
-  corSecundaria: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "corSecundaria deve ser hexadecimal (#RGB/#RRGGBB)"),
-  corFundo: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "corFundo deve ser hexadecimal (#RGB/#RRGGBB)"),
-  fonte: z.enum(["SANS", "SERIF", "MONO"]).optional(),
+  paleta: IdOpcao(Object.values(Paleta), "Paleta inválida").optional(),
+  estilo: IdOpcao(Object.values(Estilo), "Estilo inválido").optional(),
+  formatoCard: IdOpcao(
+    Object.values(FormatoCard),
+    "Formato do card inválido"
+  ).optional(),
+  layout: IdOpcao(Object.values(Layout), "Layout inválido").optional(),
+  fonte: IdOpcao(Object.values(Fonte), "Fonte inválida").optional(),
   logoUrl: z.string().url("logoUrl deve ser uma URL válida").nullable().optional(),
 });
 
@@ -13,10 +30,11 @@ const AlterarTemaSchema = z.object({
 export class AlterarTema {
   private constructor(
     readonly lojaId: string,
-    readonly corPrimaria: string,
-    readonly corSecundaria: string,
-    readonly corFundo: string,
-    readonly fonte: "SANS" | "SERIF" | "MONO" | undefined,
+    readonly paleta: string | undefined,
+    readonly estilo: string | undefined,
+    readonly formatoCard: string | undefined,
+    readonly layout: string | undefined,
+    readonly fonte: string | undefined,
     readonly logoUrl: string | null
   ) {}
 
@@ -24,9 +42,10 @@ export class AlterarTema {
     const dados = AlterarTemaSchema.parse(input);
     return new AlterarTema(
       dados.lojaId,
-      dados.corPrimaria,
-      dados.corSecundaria,
-      dados.corFundo,
+      dados.paleta,
+      dados.estilo,
+      dados.formatoCard,
+      dados.layout,
       dados.fonte,
       dados.logoUrl ?? null
     );

@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
+import { Check, Store } from 'lucide-react'
 import * as z from 'zod'
 
 import { alterarTemaAction } from '@/app/actions/loja'
@@ -23,87 +24,159 @@ import {
 } from '@/components/ui/card'
 import {
   Field,
-  FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { toast } from '@/components/ui/toast'
-
+import { UploadImagem } from '@/components/patterns/upload-imagem'
+import { cn } from '@/lib/utils'
+import {
+  ESTILOS,
+  FONTES,
+  FORMATOS_CARD,
+  LAYOUTS,
+  PALETAS,
+  obterFormatoCard,
+  obterFonte,
+  obterLayout,
+  obterPaleta,
+} from '@/lib/visual'
+import { FormatoCard, Layout } from '@/modules/loja/domain/vos/identidade-visual'
 const temaSchema = z.object({
-  corPrimaria: z
-    .string()
-    .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida (use #RRGGBB).'),
-  corSecundaria: z
-    .string()
-    .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida (use #RRGGBB).'),
-  corFundo: z
-    .string()
-    .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida (use #RRGGBB).'),
-  fonte: z.enum(['SANS', 'SERIF', 'MONO']),
+  paleta: z.string().min(1, 'Escolha uma paleta.'),
+  estilo: z.string().min(1, 'Escolha um estilo.'),
+  formatoCard: z.string().min(1, 'Escolha o formato do card.'),
+  layout: z.string().min(1, 'Escolha o layout.'),
+  fonte: z.enum(['SANS', 'MANROPE', 'SERIF', 'DISPLAY', 'MONO']),
   logoUrl: z.string().url('Informe uma URL válida.').or(z.literal('')).optional(),
 })
 
 type TemaValues = z.infer<typeof temaSchema>
 
 type TemaView = {
-  corPrimaria: string
-  corSecundaria: string
-  corFundo: string
-  fonte: 'SANS' | 'SERIF' | 'MONO'
+  paleta: string
+  estilo: string
+  formatoCard: string
+  layout: string
+  fonte: TemaValues['fonte']
   logoUrl: string | null
 }
 
-const FONTES: Record<TemaValues['fonte'], string> = {
-  SANS: 'var(--font-sans)',
-  SERIF: "Georgia, 'Times New Roman', serif",
-  MONO: 'var(--font-geist-mono)',
-}
-
-const FONTES_LABEL: Record<TemaValues['fonte'], string> = {
-  SANS: 'Sem serifa (Sans)',
-  SERIF: 'Serifada (Serif)',
-  MONO: 'Monoespaçada (Mono)',
-}
-
-function CampoCor({
+function CartaoOpcao({
+  selecionado,
+  aoSelecionar,
   label,
-  value,
-  onChange,
+  children,
+  titulo,
 }: {
+  selecionado: boolean
+  aoSelecionar: () => void
   label: string
-  value: string
-  onChange: (cor: string) => void
+  children?: React.ReactNode
+  titulo: React.ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-input px-3 py-2">
-      <span className="text-sm font-medium">{label}</span>
-      <label className="relative flex cursor-pointer items-center gap-2">
+    <button
+      type="button"
+      aria-pressed={selecionado}
+      aria-label={label}
+      onClick={aoSelecionar}
+      className={cn(
+        'group relative flex flex-col items-start gap-2 rounded-lg border p-3 text-left outline-none transition-all focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+        selecionado
+          ? 'border-primary bg-primary/5 ring-1 ring-primary'
+          : 'border-border hover:bg-muted'
+      )}
+    >
+      {children}
+      <span className="text-xs font-medium leading-tight">{titulo}</span>
+      {selecionado && (
         <span
-          className="size-7 rounded-md border border-border"
-          style={{ backgroundColor: value }}
+          className="absolute top-2 right-2 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
           aria-hidden="true"
-        />
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {value.toUpperCase()}
+        >
+          <Check className="size-3" />
         </span>
-        <input
-          type="color"
-          value={value}
-          onChange={(evento) => onChange(evento.target.value)}
-          className="sr-only"
-          aria-label={label}
+      )}
+    </button>
+  )
+}
+
+function CartaoPaleta({
+  selecionado,
+  aoSelecionar,
+  nome,
+  corPrimaria,
+  corSecundaria,
+  corFundo,
+}: {
+  selecionado: boolean
+  aoSelecionar: () => void
+  nome: string
+  corPrimaria: string
+  corSecundaria: string
+  corFundo: string
+}) {
+  return (
+    <CartaoOpcao selecionado={selecionado} aoSelecionar={aoSelecionar} label={`Paleta ${nome}`} titulo={nome}>
+      <span
+        className="flex size-9 items-center rounded-full border border-border"
+        style={{ backgroundColor: corFundo }}
+        aria-hidden="true"
+      >
+        <span className="ml-1.5 h-3.5 w-3.5 rounded-full" style={{ backgroundColor: corPrimaria }} />
+        <span className="ml-0.5 h-3.5 w-3.5 rounded-full" style={{ backgroundColor: corSecundaria }} />
+      </span>
+    </CartaoOpcao>
+  )
+}
+
+function RadioFormato({ valor, label }: { valor: FormatoCard; label: string }) {
+  return (
+    <span className="flex w-full items-center justify-start gap-2" aria-hidden="true">
+      <span className="w-10 shrink-0 overflow-hidden rounded-md border border-foreground/15 bg-muted">
+        <span
+          className={cn(
+            'block w-full bg-muted-foreground/25',
+            valor === FormatoCard.QUADRADO && 'aspect-square',
+            valor === FormatoCard.RETRATO && 'aspect-[3/4]',
+            valor === FormatoCard.PANORAMICO && 'aspect-[4/3]'
+          )}
         />
-      </label>
+      </span>
+      <span className="text-xs">{label}</span>
+    </span>
+  )
+}
+
+function DiagramaLayout({ valor }: { valor: Layout }) {
+  const celula = (
+    <span className="h-full min-h-3 flex-1 rounded-[2px] bg-muted-foreground/25" aria-hidden="true" />
+  )
+  return (
+    <span className="flex h-9 w-full items-stretch gap-1" aria-hidden="true">
+      {valor === Layout.LISTA ? (
+        <>
+          {celula}
+          {celula}
+        </>
+      ) : valor === Layout.DESTAQUE ? (
+        <span className="h-full w-full rounded-[2px] bg-muted-foreground/25" />
+      ) : (
+        Array.from({ length: valor === Layout.GRADE_DENSA ? 3 : 2 }).map((_, i) => (
+          <span key={i} className="h-full min-h-3 flex-1 rounded-[2px] bg-muted-foreground/25" />
+        ))
+      )}
+    </span>
+  )
+}
+
+function TituloGrupo({ titulo, descricao }: { titulo: string; descricao: string }) {
+  return (
+    <div>
+      <h3 className="font-heading text-sm font-semibold tracking-tight">{titulo}</h3>
+      <p className="text-sm text-muted-foreground">{descricao}</p>
     </div>
   )
 }
@@ -115,27 +188,32 @@ export function TemaForm({ tema }: { tema: TemaView }) {
   const form = useForm<TemaValues>({
     resolver: zodResolver(temaSchema),
     defaultValues: {
-      corPrimaria: tema.corPrimaria,
-      corSecundaria: tema.corSecundaria,
-      corFundo: tema.corFundo,
+      paleta: tema.paleta,
+      estilo: tema.estilo,
+      formatoCard: tema.formatoCard,
+      layout: tema.layout,
       fonte: tema.fonte,
       logoUrl: tema.logoUrl ?? '',
     },
   })
 
-  const corPrimaria = useWatch({ control: form.control, name: 'corPrimaria' })
-  const corSecundaria = useWatch({ control: form.control, name: 'corSecundaria' })
-  const corFundo = useWatch({ control: form.control, name: 'corFundo' })
+  const paleta = useWatch({ control: form.control, name: 'paleta' })
+  const formatoCard = useWatch({ control: form.control, name: 'formatoCard' })
+  const layout = useWatch({ control: form.control, name: 'layout' })
   const fonte = useWatch({ control: form.control, name: 'fonte' })
+
+  const dadosPaleta = obterPaleta(paleta)
+  const cssFonte = obterFonte(fonte).css
 
   async function handleSubmit(values: TemaValues) {
     setIsLoading(true)
     setError(null)
     try {
       const resultado = await alterarTemaAction({
-        corPrimaria: values.corPrimaria,
-        corSecundaria: values.corSecundaria,
-        corFundo: values.corFundo,
+        paleta: values.paleta,
+        estilo: values.estilo,
+        formatoCard: values.formatoCard,
+        layout: values.layout,
         fonte: values.fonte,
         logoUrl: values.logoUrl || null,
       })
@@ -153,13 +231,16 @@ export function TemaForm({ tema }: { tema: TemaView }) {
     }
   }
 
+  const previewLayout = obterLayout(layout)
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Aparência</CardTitle>
           <CardDescription>
-            Cores e fonte da sua vitrine. O tema é aplicado na hora.
+            Combine paleta, estilo, formato do card e layout. O visual é aplicado
+            na hora.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -167,129 +248,188 @@ export function TemaForm({ tema }: { tema: TemaView }) {
             id="tema-form"
             onSubmit={form.handleSubmit(handleSubmit)}
             noValidate
+            className="flex flex-col gap-8"
           >
             <FieldGroup>
               <Controller
-                name="corPrimaria"
+                name="paleta"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="cor-primaria">Cor primária</FieldLabel>
-                    <CampoCor
-                      label="Botões e destaques"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor="paleta">Paleta de cores</FieldLabel>
+                    <div
+                      id="paleta"
+                      role="group"
+                      aria-label="Paleta de cores"
+                      className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+                    >
+                      {PALETAS.map((p) => (
+                        <CartaoPaleta
+                          key={p.id}
+                          selecionado={field.value === p.id}
+                          aoSelecionar={() => field.onChange(p.id)}
+                          nome={p.nome}
+                          corPrimaria={p.corPrimaria}
+                          corSecundaria={p.corSecundaria}
+                          corFundo={p.corFundo}
+                        />
+                      ))}
+                    </div>
                   </Field>
                 )}
               />
+
               <Controller
-                name="corSecundaria"
+                name="estilo"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="cor-secundaria">
-                      Cor secundária
-                    </FieldLabel>
-                    <CampoCor
-                      label="Detalhes e acentos"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor="estilo">Estilo</FieldLabel>
+                    <div
+                      id="estilo"
+                      role="group"
+                      aria-label="Estilo"
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                    >
+                      {ESTILOS.map((e) => (
+                        <CartaoOpcao
+                          key={e.id}
+                          selecionado={field.value === e.id}
+                          aoSelecionar={() => field.onChange(e.id)}
+                          label={`Estilo ${e.nome}`}
+                          titulo={e.nome}
+                        >
+                          <span className="text-[11px] text-muted-foreground">
+                            {e.descricao}
+                          </span>
+                        </CartaoOpcao>
+                      ))}
+                    </div>
                   </Field>
                 )}
               />
+
               <Controller
-                name="corFundo"
+                name="formatoCard"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="cor-fundo">Cor de fundo</FieldLabel>
-                    <CampoCor
-                      label="Fundo da vitrine"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor="formato-card">Formato do card</FieldLabel>
+                    <div
+                      id="formato-card"
+                      role="group"
+                      aria-label="Formato do card"
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+                    >
+                      {FORMATOS_CARD.map((f) => (
+                        <CartaoOpcao
+                          key={f.id}
+                          selecionado={field.value === f.id}
+                          aoSelecionar={() => field.onChange(f.id)}
+                          label={`Formato ${f.nome}`}
+                          titulo={f.nome}
+                        >
+                          <RadioFormato valor={f.id} label={f.descricao} />
+                        </CartaoOpcao>
+                      ))}
+                    </div>
                   </Field>
                 )}
               />
+
+              <Controller
+                name="layout"
+                control={form.control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor="layout">Layout da grade</FieldLabel>
+                    <div
+                      id="layout"
+                      role="group"
+                      aria-label="Layout da grade"
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                    >
+                      {LAYOUTS.map((l) => (
+                        <CartaoOpcao
+                          key={l.id}
+                          selecionado={field.value === l.id}
+                          aoSelecionar={() => field.onChange(l.id)}
+                          label={`Layout ${l.nome}`}
+                          titulo={l.nome}
+                        >
+                          <DiagramaLayout valor={l.id} />
+                          <span className="text-[11px] text-muted-foreground">
+                            {l.descricao}
+                          </span>
+                        </CartaoOpcao>
+                      ))}
+                    </div>
+                  </Field>
+                )}
+              />
+
               <Controller
                 name="fonte"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
+                render={({ field }) => (
+                  <Field>
                     <FieldLabel htmlFor="fonte">Fonte</FieldLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={(valor) =>
-                        field.onChange(valor ?? 'SANS')
-                      }
+                    <div
+                      id="fonte"
+                      role="group"
+                      aria-label="Fonte"
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                     >
-                      <SelectTrigger
-                        id="fonte"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(
-                          Object.keys(FONTES_LABEL) as TemaValues['fonte'][]
-                        ).map((valor) => (
-                          <SelectItem key={valor} value={valor}>
-                            {FONTES_LABEL[valor]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                      {FONTES.map((f) => (
+                        <CartaoOpcao
+                          key={f.id}
+                          selecionado={field.value === f.id}
+                          aoSelecionar={() => field.onChange(f.id)}
+                          label={`Fonte ${f.nome}`}
+                          titulo={f.nome}
+                        >
+                          <span
+                            className="text-base leading-tight"
+                            style={{ fontFamily: f.css }}
+                          >
+                            Aa
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {f.descricao}
+                          </span>
+                        </CartaoOpcao>
+                      ))}
+                    </div>
                   </Field>
                 )}
               />
+
               <Controller
                 name="logoUrl"
                 control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>URL do logo</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type="url"
-                      placeholder="https://..."
-                      aria-invalid={fieldState.invalid}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
+                    <UploadImagem
+                      value={field.value || null}
+                      onChange={(url) => field.onChange(url ?? '')}
+                      tipo="logo"
+                      descricao="Use uma imagem quadrada (ex.: 512x512), até 5 MB."
                     />
-                    <FieldDescription>
-                      Opcional. Use uma imagem quadrada (ex.: 512x512).
-                    </FieldDescription>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
                   </Field>
                 )}
               />
             </FieldGroup>
 
             {error && (
-              <Alert variant="destructive" className="mt-4">
+              <Alert variant="destructive">
                 <AlertTitle>Não foi possível salvar</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
           </form>
         </CardContent>
-        <CardFooter className="justify-end">
+        <CardFooter className="justify-end border-t">
           <Button type="submit" form="tema-form" disabled={isLoading}>
             {isLoading ? <Spinner data-icon="inline-start" /> : null}
             {isLoading ? 'Salvando...' : 'Salvar aparência'}
@@ -298,38 +438,75 @@ export function TemaForm({ tema }: { tema: TemaView }) {
       </Card>
 
       <div className="flex flex-col gap-3">
-        <p className="text-sm font-medium">Prévia da vitrine</p>
+        <TituloGrupo
+          titulo="Prévia da vitrine"
+          descricao="Veja como o visual escolhido aparece para os clientes."
+        />
         <div
           className="rounded-xl border p-4"
           style={{
-            backgroundColor: corFundo,
-            fontFamily: FONTES[fonte],
+            backgroundColor: dadosPaleta.corFundo,
+            fontFamily: cssFonte,
           }}
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="font-heading font-semibold">Minha Loja</span>
+            {tema.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tema.logoUrl}
+                alt="Logo"
+                className="size-7 rounded-full object-cover"
+              />
+            ) : (
+              <span
+                className="inline-flex size-7 items-center justify-center rounded-lg text-white"
+                style={{ backgroundColor: dadosPaleta.corPrimaria }}
+                aria-hidden="true"
+              >
+                <Store className="size-3.5" />
+              </span>
+            )}
+            <span className="font-heading text-sm font-semibold tracking-tight">
+              Minha Loja
+            </span>
             <span
-              className="rounded-full px-2.5 py-1 text-xs font-medium text-white"
-              style={{ backgroundColor: corPrimaria }}
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+              style={{ backgroundColor: dadosPaleta.corPrimaria }}
             >
               Pedido
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, indice) => (
-              <div key={indice} className="rounded-lg border border-foreground/10 p-2">
-                <div className="aspect-square rounded-md bg-foreground/10" />
-                <div className="mt-2 h-2 rounded bg-foreground/15" />
+
+          <div className={cn('mt-4 grid gap-2', classeLayoutPreview(previewLayout.id))}>
+            {Array.from({ length: 4 }).map((_, indice) => (
+              <div
+                key={indice}
+                className="overflow-hidden rounded-lg border border-foreground/10 bg-background"
+              >
                 <div
-                  className="mt-1 h-2 w-1/2 rounded"
-                  style={{ backgroundColor: corSecundaria }}
-                />
+                  className={cn(
+                    'w-full bg-foreground/10',
+                    obterFormatoCard(formatoCard).aspecto
+                  )}
+                >
+                  <div className="flex size-full items-center justify-center text-muted-foreground">
+                    <Store className="size-4" aria-hidden="true" />
+                  </div>
+                </div>
+                <div className="p-2">
+                  <div className="h-2 rounded bg-foreground/15" />
+                  <div
+                    className="mt-1.5 h-2 w-1/2 rounded"
+                    style={{ backgroundColor: dadosPaleta.corSecundaria }}
+                  />
+                </div>
               </div>
             ))}
           </div>
+
           <div
-            className="mt-3 rounded-lg px-3 py-2 text-center text-sm font-medium text-white"
-            style={{ backgroundColor: corPrimaria }}
+            className="mt-4 rounded-lg px-3 py-2 text-center text-xs font-medium text-white"
+            style={{ backgroundColor: dadosPaleta.corPrimaria }}
           >
             Finalizar pedido no WhatsApp
           </div>
@@ -337,4 +514,18 @@ export function TemaForm({ tema }: { tema: TemaView }) {
       </div>
     </div>
   )
+}
+
+function classeLayoutPreview(id: Layout): string {
+  switch (id) {
+    case Layout.LISTA:
+      return 'grid-cols-1'
+    case Layout.GRADE_LARGA:
+      return 'grid-cols-2'
+    case Layout.DESTAQUE:
+      return 'grid-cols-2'
+    case Layout.GRADE_DENSA:
+    default:
+      return 'grid-cols-2'
+  }
 }

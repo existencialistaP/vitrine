@@ -103,7 +103,7 @@ export function SignUpForm({
   return (
     <div className={cn('flex min-h-svh flex-col md:flex-row', className)} {...props}>
       {/* Brand/Imagery Section (Left) */}
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-primary p-xl md:flex md:w-1/2 lg:w-3/5">
+      <section className="relative hidden flex-col justify-between overflow-hidden bg-primary p-10 md:flex md:w-1/2 md:p-12 lg:w-3/5">
         <div className="relative z-10">
           <div className="mb-8 flex items-center gap-3">
             <Store className="size-8 text-primary-foreground" />

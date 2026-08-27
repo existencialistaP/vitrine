@@ -13,7 +13,10 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@/components/ui/toggle-group'
+import { cn } from '@/lib/utils'
 import type { VitrineView } from '@/lib/vitrine-view'
+import { classeEstiloCard, classeLayout, obterFonte, obterFormatoCard } from '@/lib/visual'
+import { Layout } from '@/modules/loja/domain/vos/identidade-visual'
 
 import { OrderSheet } from './order-sheet'
 import { ProductCard } from './product-card'
@@ -26,16 +29,17 @@ type ItemCarrinho = {
   quantidade: number
 }
 
-const FONTES: Record<VitrineView['tema']['fonte'], string> = {
-  SANS: 'var(--font-sans)',
-  SERIF: "Georgia, 'Times New Roman', serif",
-  MONO: 'var(--font-geist-mono)',
-}
-
 export function Storefront({ vitrine }: { vitrine: VitrineView }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>('todas')
   const [carrinho, setCarrinho] = useState<Record<string, ItemCarrinho>>({})
   const [sheetAberto, setSheetAberto] = useState(false)
+
+  const cssFonte = obterFonte(vitrine.tema.fonte).css
+  const aspectoCard = obterFormatoCard(vitrine.tema.formatoCard).aspecto
+  const classeCard = classeEstiloCard(vitrine.tema.estilo)
+  const gridClass = classeLayout(vitrine.tema.layout)
+  const ehLista = vitrine.tema.layout === Layout.LISTA
+  const ehDestaque = vitrine.tema.layout === Layout.DESTAQUE
 
   useEffect(() => {
     const raiz = document.documentElement
@@ -97,7 +101,7 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
   return (
     <div
       className="min-h-svh bg-(--vitrine-bg)"
-      style={{ fontFamily: FONTES[vitrine.tema.fonte] }}
+      style={{ fontFamily: cssFonte }}
     >
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-(--vitrine-bg)/90 backdrop-blur-md">
@@ -138,14 +142,14 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-20 sm:px-6">
         {/* Hero */}
-        <section className="flex flex-col items-center gap-3 py-10 text-center sm:py-14">
-          <h1 className="max-w-2xl font-heading text-3xl font-bold tracking-tight sm:text-5xl">
+        <section className="flex flex-col items-center gap-5 py-12 text-center sm:py-16">
+          <h1 className="max-w-2xl font-heading text-4xl font-bold tracking-tight sm:text-5xl">
             {vitrine.nome}
           </h1>
           {vitrine.descricao && (
-            <p className="max-w-xl text-balance text-muted-foreground">
+            <p className="max-w-xl text-balance text-base text-muted-foreground sm:text-lg">
               {vitrine.descricao}
             </p>
           )}
@@ -156,8 +160,9 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
             className="mt-2"
           >
             <Button
-              variant="outline"
-              className="bg-background/50"
+              variant="default"
+              size="lg"
+              className="gap-2"
             >
               <MessageCircle data-icon="inline-start" />
               Chamar no WhatsApp
@@ -167,32 +172,51 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
 
         {/* Categorias */}
         {vitrine.categorias.length > 0 && (
-          <ToggleGroup
-            className="mb-8 flex-wrap justify-center"
-            spacing={1}
-            value={[categoriaAtiva]}
-            onValueChange={(valores) => {
-              setCategoriaAtiva(valores[0] ?? 'todas')
-            }}
-          >
-            <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
-            {vitrine.categorias.map((categoria) => (
-              <ToggleGroupItem key={categoria.id} value={categoria.id}>
-                {categoria.nome}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <div className="mb-10 flex justify-center">
+            <ToggleGroup
+              className="flex-wrap justify-center"
+              spacing={1}
+              value={[categoriaAtiva]}
+              onValueChange={(valores) => {
+                setCategoriaAtiva(valores[0] ?? 'todas')
+              }}
+            >
+              <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
+              {vitrine.categorias.map((categoria) => (
+                <ToggleGroupItem key={categoria.id} value={categoria.id}>
+                  {categoria.nome}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
         )}
 
         {/* Produtos */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {produtosFiltrados.map((produto) => (
+        {ehDestaque && produtosFiltrados.length > 0 && (
+          <div className="mb-4">
             <ProductCard
-              key={produto.id}
-              produto={produto}
+              produto={produtosFiltrados[0]}
               onAdicionar={adicionar}
+              aspecto="aspect-[16/9] sm:aspect-[2/1]"
+              classeCard="rounded-2xl"
+              horizontal
+              destaque
             />
-          ))}
+          </div>
+        )}
+        <div className={cn('grid', gridClass)}>
+          {produtosFiltrados
+            .slice(ehDestaque ? 1 : 0)
+            .map((produto) => (
+              <ProductCard
+                key={produto.id}
+                produto={produto}
+                onAdicionar={adicionar}
+                aspecto={aspectoCard}
+                classeCard={classeCard}
+                horizontal={ehLista}
+              />
+            ))}
         </div>
       </main>
 

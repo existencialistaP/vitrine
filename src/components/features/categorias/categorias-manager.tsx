@@ -1,7 +1,15 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ArrowDown, ArrowUp, Pencil, Plus, Tags, Trash2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  GripVertical,
+  Pencil,
+  Plus,
+  Tags,
+  Trash2,
+} from 'lucide-react'
 
 import {
   adicionarCategoriaAction,
@@ -21,7 +29,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -40,6 +48,7 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { toast } from '@/components/ui/toast'
 import { EmptyState } from '@/components/patterns/empty-state'
+import { cn } from '@/lib/utils'
 
 type CategoriaView = { id: string; nome: string; ordem: number }
 
@@ -47,12 +56,14 @@ function CategoriaFormDialog({
   aberto,
   onOpenChange,
   titulo,
+  descricao,
   valorInicial,
   onSubmit,
 }: {
   aberto: boolean
   onOpenChange: (aberto: boolean) => void
   titulo: string
+  descricao: string
   valorInicial: string
   onSubmit: (nome: string) => Promise<void>
 }) {
@@ -82,9 +93,7 @@ function CategoriaFormDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{titulo}</DialogTitle>
-          <DialogDescription>
-            Escolha um nome claro para identificar os produtos.
-          </DialogDescription>
+          <DialogDescription>{descricao}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(evento) => {
@@ -190,10 +199,12 @@ export function CategoriasManager({
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {ordenadas.length} {ordenadas.length === 1 ? 'categoria' : 'categorias'}
+          {ordenadas.length}{' '}
+          {ordenadas.length === 1 ? 'categoria' : 'categorias'}
         </p>
         <Button onClick={() => setDialogNova(true)}>
           <Plus data-icon="inline-start" />
@@ -201,6 +212,7 @@ export function CategoriasManager({
         </Button>
       </div>
 
+      {/* Empty state */}
       {ordenadas.length === 0 ? (
         <EmptyState
           icon={Tags}
@@ -214,90 +226,114 @@ export function CategoriasManager({
           }
         />
       ) : (
+        /* Category list */
         <Card>
-          <div className="flex flex-col divide-y divide-border">
-            {ordenadas.map((categoria, indice) => (
-              <div
-                key={categoria.id}
-                className="flex items-center justify-between gap-3 px-4 py-3"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="font-heading text-sm font-medium">
-                    {categoria.nome}
-                  </span>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={indice === 0 || isPending}
-                    aria-label={`Mover ${categoria.nome} para cima`}
-                    onClick={() => mover(categoria, -1)}
-                  >
-                    <ArrowUp aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={indice === ordenadas.length - 1 || isPending}
-                    aria-label={`Mover ${categoria.nome} para baixo`}
-                    onClick={() => mover(categoria, 1)}
-                  >
-                    <ArrowDown aria-hidden="true" />
-                  </Button>
-                  <Separator orientation="vertical" className="mx-1 h-4" />
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Renomear ${categoria.nome}`}
-                    onClick={() =>
-                      setDialogRenomear({ aberto: true, categoria })
-                    }
-                  >
-                    <Pencil aria-hidden="true" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Remover ${categoria.nome}`}
-                        >
-                          <Trash2 aria-hidden="true" />
-                        </Button>
-                      }
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {ordenadas.map((categoria, indice) => (
+                <div
+                  key={categoria.id}
+                  className={cn(
+                    'flex items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5',
+                    !isPending && 'transition-colors hover:bg-muted/30'
+                  )}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <GripVertical
+                      className="size-4 shrink-0 text-muted-foreground/30"
+                      aria-hidden="true"
                     />
-                    <AlertDialogContent size="sm">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remover categoria?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          <strong>{categoria.nome}</strong> será removida. Os
-                          produtos continuam na vitrine, sem categoria.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          variant="destructive"
-                          onClick={() => remover(categoria)}
-                        >
-                          Remover
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    <span
+                      className={cn(
+                        'size-2 shrink-0 rounded-full',
+                        indice === 0
+                          ? 'bg-primary'
+                          : indice === ordenadas.length - 1
+                            ? 'bg-emerald-400'
+                            : 'bg-muted-foreground/30'
+                      )}
+                      aria-hidden="true"
+                    />
+                    <span className="font-heading text-sm font-medium">
+                      {categoria.nome}
+                    </span>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={indice === 0 || isPending}
+                      aria-label={`Mover ${categoria.nome} para cima`}
+                      onClick={() => mover(categoria, -1)}
+                    >
+                      <ArrowUp className="size-4" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={indice === ordenadas.length - 1 || isPending}
+                      aria-label={`Mover ${categoria.nome} para baixo`}
+                      onClick={() => mover(categoria, 1)}
+                    >
+                      <ArrowDown className="size-4" aria-hidden="true" />
+                    </Button>
+                    <Separator orientation="vertical" className="mx-1 h-5" />
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Renomear ${categoria.nome}`}
+                      onClick={() =>
+                        setDialogRenomear({ aberto: true, categoria })
+                      }
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Remover ${categoria.nome}`}
+                          >
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </Button>
+                        }
+                      />
+                      <AlertDialogContent size="sm">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remover categoria?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            <strong>{categoria.nome}</strong> será removida.
+                            Produtos continuam na vitrine, sem categoria.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            onClick={() => remover(categoria)}
+                          >
+                            Remover
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
       )}
 
+      {/* Dialogs */}
       <CategoriaFormDialog
         aberto={dialogNova}
         onOpenChange={setDialogNova}
         titulo="Nova categoria"
+        descricao="Escolha um nome claro para identificar os produtos."
         valorInicial=""
         onSubmit={async (nome) => {
           const resultado = await adicionarCategoriaAction({ nome })
@@ -322,6 +358,7 @@ export function CategoriasManager({
         aberto={dialogRenomear.aberto}
         onOpenChange={(aberto) => setDialogRenomear({ aberto })}
         titulo="Renomear categoria"
+        descricao="Escolha um novo nome para esta categoria."
         valorInicial={dialogRenomear.categoria?.nome ?? ''}
         onSubmit={async (nome) => {
           const categoria = dialogRenomear.categoria
@@ -344,6 +381,6 @@ export function CategoriasManager({
           })
         }}
       />
-    </>
+    </div>
   )
 }

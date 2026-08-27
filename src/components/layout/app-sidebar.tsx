@@ -24,9 +24,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  SidebarRail,
 } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
 
-const ITENS = [
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
+}
+
+const ITENS: NavItem[] = [
   { href: '/dashboard', label: 'Visão geral', icon: LayoutDashboard },
   { href: '/dashboard/produtos', label: 'Produtos', icon: Package },
   { href: '/dashboard/categorias', label: 'Categorias', icon: Tags },
@@ -34,7 +42,15 @@ const ITENS = [
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
-export function AppSidebar({ slug }: { slug?: string }) {
+export function AppSidebar({
+  variant = 'sidebar',
+  slug,
+  lojaNome,
+}: {
+  variant?: 'sidebar' | 'floating' | 'inset'
+  slug?: string
+  lojaNome?: string
+}) {
   const pathname = usePathname()
 
   function estaAtivo(href: string) {
@@ -42,7 +58,7 @@ export function AppSidebar({ slug }: { slug?: string }) {
   }
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar collapsible="offcanvas" variant={variant}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -50,11 +66,19 @@ export function AppSidebar({ slug }: { slug?: string }) {
               size="lg"
               render={<Link href="/dashboard" />}
               isActive={estaAtivo('/dashboard')}
+              className="gap-3"
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Store className="size-4" aria-hidden="true" />
               </div>
-              <span>Vitrine</span>
+              <div className="flex min-w-0 flex-col leading-tight">
+                <span className="truncate font-semibold">Vitrine</span>
+                {lojaNome && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {lojaNome}
+                  </span>
+                )}
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -70,7 +94,7 @@ export function AppSidebar({ slug }: { slug?: string }) {
                   render={<Link href={item.href} />}
                   isActive={estaAtivo(item.href)}
                 >
-                  <item.icon aria-hidden="true" />
+                  <item.icon aria-hidden={true} />
                   <span>{item.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -111,6 +135,8 @@ export function AppSidebar({ slug }: { slug?: string }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   )
 }

@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import { EmptyState } from '@/components/patterns/empty-state'
+import { cn } from '@/lib/utils'
 
 import { ProdutoForm } from './produto-form'
 
@@ -132,12 +133,13 @@ export function ProdutosManager({
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
+      {/* Search + Filter bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
           <InputGroup className="max-w-xs">
             <InputGroupAddon>
-              <Search aria-hidden="true" />
+              <Search className="size-4" aria-hidden="true" />
             </InputGroupAddon>
             <InputGroupInput
               placeholder="Buscar produto..."
@@ -150,7 +152,7 @@ export function ProdutosManager({
             value={categoriaFiltro}
             onValueChange={(valor) => setCategoriaFiltro(valor ?? 'todas')}
           >
-            <SelectTrigger className="min-w-36" aria-label="Filtrar por categoria">
+            <SelectTrigger className="min-w-40" aria-label="Filtrar por categoria">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
@@ -169,10 +171,39 @@ export function ProdutosManager({
         </Button>
       </div>
 
+      {/* Stats bar */}
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <span>
+          <strong className="text-foreground">{filtrados.length}</strong>{' '}
+          {filtrados.length === 1 ? 'produto' : 'produtos'}
+        </span>
+        {categoriaFiltro !== 'todas' && (
+          <>
+            <span className="text-border">|</span>
+            <span>
+              Categoria: <strong className="text-foreground">{nomeCategoria(categoriaFiltro)}</strong>
+            </span>
+          </>
+        )}
+        {busca && (
+          <>
+            <span className="text-border">|</span>
+            <span>
+              Busca: <strong className="text-foreground">&ldquo;{busca}&rdquo;</strong>
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Table */}
       {filtrados.length === 0 ? (
         <EmptyState
           icon={Package}
-          title={produtos.length === 0 ? 'Nenhum produto ainda' : 'Nenhum resultado'}
+          title={
+            produtos.length === 0
+              ? 'Nenhum produto ainda'
+              : 'Nenhum resultado'
+          }
           description={
             produtos.length === 0
               ? 'Adicione seu primeiro produto para começar a vender.'
@@ -192,16 +223,21 @@ export function ProdutosManager({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produto</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Disponível</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="w-[40%]">Produto</TableHead>
+                <TableHead className="w-[20%]">Categoria</TableHead>
+                <TableHead className="w-[15%]">Preço</TableHead>
+                <TableHead className="w-[15%]">Disponível</TableHead>
+                <TableHead className="w-[10%] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtrados.map((produto) => (
-                <TableRow key={produto.id}>
+                <TableRow
+                  key={produto.id}
+                  className={cn(
+                    !produto.disponivel && 'opacity-60'
+                  )}
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
@@ -232,9 +268,13 @@ export function ProdutosManager({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {nomeCategoria(produto.categoriaId) ?? '—'}
+                    <span className="text-sm">
+                      {nomeCategoria(produto.categoriaId) ?? (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </span>
                   </TableCell>
-                  <TableCell className="tabular-nums">
+                  <TableCell className="tabular-nums font-medium">
                     {produto.precoFormatado}
                   </TableCell>
                   <TableCell>
@@ -257,7 +297,7 @@ export function ProdutosManager({
                           setDialog({ aberto: true, produto })
                         }
                       >
-                        <Pencil aria-hidden="true" />
+                        <Pencil className="size-4" aria-hidden="true" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger
@@ -267,7 +307,7 @@ export function ProdutosManager({
                               size="icon-sm"
                               aria-label={`Remover ${produto.nome}`}
                             >
-                              <Trash2 aria-hidden="true" />
+                              <Trash2 className="size-4" aria-hidden="true" />
                             </Button>
                           }
                         />
@@ -299,6 +339,7 @@ export function ProdutosManager({
         </Card>
       )}
 
+      {/* Product form dialog */}
       <Dialog
         open={dialog.aberto}
         onOpenChange={(aberto) => setDialog({ aberto })}
@@ -322,6 +363,6 @@ export function ProdutosManager({
           />
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

@@ -78,7 +78,7 @@ export function LoginForm({
   return (
     <div className={cn('flex min-h-svh flex-col md:flex-row', className)} {...props}>
       {/* Brand Visual Side (Left) */}
-      <div className="relative hidden w-1/2 items-center justify-center bg-primary p-xl md:flex">
+      <div className="relative hidden w-1/2 items-center justify-center bg-primary p-10 md:flex md:p-12">
         <div className="relative z-10 max-w-lg text-primary-foreground">
           <div className="mb-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-3 py-1 text-sm backdrop-blur-md">

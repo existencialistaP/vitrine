@@ -38,12 +38,13 @@ model Loja {
   whatsapp          String
   status            StatusLoja @default(ATIVA)
 
-  /// Identidade visual embutida (padrão @Embedded do JPA)
-  temaCorPrimaria   String?
-  temaCorSecundaria String?
-  temaCorFundo      String?
-  temaFonte         String?
-  temaLogoUrl       String?
+  /// Identidade visual embutida (padrão @Embedded do JPA) — combos predefinidos
+  temaPaleta      String  @default("OCEANO")
+  temaEstilo      String  @default("CLASSICO")
+  temaFormatoCard String  @default("QUADRADO")
+  temaLayout      String  @default("GRADE_DENSA")
+  temaFonte       String  @default("SANS")
+  temaLogoUrl     String?
 
   /// Lock otimista (espelho do @Version)
   versao      Int      @default(1)

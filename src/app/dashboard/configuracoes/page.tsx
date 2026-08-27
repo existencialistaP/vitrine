@@ -21,7 +21,7 @@ export default async function ConfiguracoesPage() {
         </PageHeaderContent>
       </PageHeader>
 
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="max-w-2xl">
         <LojaConfigForm
           dados={{
             nome: loja.getNome().getValue(),

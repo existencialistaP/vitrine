@@ -19,7 +19,6 @@ import { Whatsapp } from "../domain/vos/whatsapp";
 import { Preco } from "../domain/vos/preco";
 import { Ordem } from "../domain/vos/ordem";
 import { Url } from "../domain/vos/url";
-import { CorHex } from "../domain/vos/cor-hex";
 import { Fonte, parseFonte } from "../domain/vos/fonte";
 import { IdentidadeVisual } from "../domain/vos/identidade-visual";
 import { DisponibilidadeValue } from "../domain/vos/disponibilidade";
@@ -192,9 +191,10 @@ export class PrismaLojaRepository implements LojaRepository {
         : loja.getDescricao().getValue(),
       whatsapp: loja.getWhatsapp().getE164(),
       status: loja.getStatus(),
-      temaCorPrimaria: tema.getCorPrimaria().getValue(),
-      temaCorSecundaria: tema.getCorSecundaria().getValue(),
-      temaCorFundo: tema.getCorFundo().getValue(),
+      temaPaleta: tema.getPaleta(),
+      temaEstilo: tema.getEstilo(),
+      temaFormatoCard: tema.getFormatoCard(),
+      temaLayout: tema.getLayout(),
       temaFonte: tema.getFonte(),
       temaLogoUrl: tema.getLogoUrl()?.getValue() ?? null,
       versao: loja.getVersion() ?? 1,
@@ -211,9 +211,10 @@ export class PrismaLojaRepository implements LojaRepository {
       whatsapp: Whatsapp.of(linha.whatsapp),
       status: linha.status,
       tema: IdentidadeVisual.of({
-        corPrimaria: CorHex.of(linha.temaCorPrimaria ?? "#1D4ED8"),
-        corSecundaria: CorHex.of(linha.temaCorSecundaria ?? "#F59E0B"),
-        corFundo: CorHex.of(linha.temaCorFundo ?? "#FFFFFF"),
+        paleta: linha.temaPaleta,
+        estilo: linha.temaEstilo,
+        formatoCard: linha.temaFormatoCard,
+        layout: linha.temaLayout,
         fonte: parseFonte(linha.temaFonte) ?? Fonte.SANS,
         logoUrl: linha.temaLogoUrl !== null ? Url.of(linha.temaLogoUrl) : null,
       }),

@@ -29,6 +29,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toast'
+import { UploadImagem } from '@/components/patterns/upload-imagem'
 
 type ProdutoView = {
   id: string
@@ -233,17 +234,15 @@ export function ProdutoForm({
         <Controller
           name="imagemUrl"
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>URL da imagem</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="url"
-                placeholder="https://..."
-                aria-invalid={fieldState.invalid}
+          render={({ field }) => (
+            <Field>
+              <FieldLabel htmlFor={field.name}>Imagem do produto</FieldLabel>
+              <UploadImagem
+                value={field.value || null}
+                onChange={(url) => field.onChange(url ?? '')}
+                tipo="produto"
+                descricao="Envie uma foto do produto (JPG, PNG, WEBP — até 5 MB)."
               />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
