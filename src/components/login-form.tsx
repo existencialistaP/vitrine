@@ -69,7 +69,13 @@ export function LoginForm({
       if (error) throw error
       router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado')
+      const message = err instanceof Error ? err.message : ''
+      const isCredentialError = /invalid login credentials|invalid email or password/i.test(message)
+      setError(
+        isCredentialError
+          ? 'E-mail ou senha inválidos.'
+          : 'Não foi possível entrar agora. Tente novamente.'
+      )
     } finally {
       setIsLoading(false)
     }
