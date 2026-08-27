@@ -7,16 +7,11 @@ import { Button } from '@/components/ui/button'
 export function Hero() {
   return (
     <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
-      {/* Background gradient */}
-      <div
-        className="absolute inset-0 -z-10"
-        aria-hidden="true"
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
-      </div>
-
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 text-center">
+        <div className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+          <span className="size-2 rounded-full bg-success" aria-hidden="true" />
+          Uma presença digital que trabalha por você
+        </div>
         {/* Badge */}
         <Badge variant="secondary" className="gap-1.5 px-4 py-1.5 text-sm font-medium">
           <Store className="size-3.5" aria-hidden="true" />

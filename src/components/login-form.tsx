@@ -76,61 +76,42 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn('flex min-h-svh flex-col md:flex-row', className)} {...props}>
-      {/* Brand Visual Side (Left) */}
-      <div className="relative hidden w-1/2 items-center justify-center bg-primary p-10 md:flex md:p-12">
-        <div className="relative z-10 max-w-lg text-primary-foreground">
-          <div className="mb-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-3 py-1 text-sm backdrop-blur-md">
-              <Store className="size-4" />
-              Capacitando microempreendedores
-            </span>
-          </div>
-          <h1 className="mb-6 text-4xl font-bold tracking-tight leading-tight">
-            Faça seu negócio crescer com a Vitrine.
+    <div className={cn('flex min-h-svh bg-muted/40', className)} {...props}>
+      <aside className="relative hidden w-[46%] flex-col justify-between overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:p-14">
+        <div className="flex items-center gap-3 font-heading text-lg font-semibold">
+          <span className="inline-flex size-10 items-center justify-center rounded-xl bg-primary-foreground/15 ring-1 ring-primary-foreground/20">
+            <Store aria-hidden="true" />
+          </span>
+          Vitrine
+        </div>
+        <div className="relative z-10 max-w-md">
+          <p className="mb-5 text-sm font-medium uppercase tracking-[0.18em] text-primary-foreground/70">Seu negócio, mais visível</p>
+          <h1 className="font-heading text-4xl font-semibold leading-tight tracking-tight xl:text-5xl">
+            Uma loja simples de cuidar e fácil de encontrar.
           </h1>
-          <p className="mb-8 text-lg opacity-90">
-            Um jeito simples e digno de gerenciar sua loja, acompanhar o crescimento e conectar-se
-            com clientes em qualquer lugar.
+          <p className="mt-6 max-w-sm text-base leading-7 text-primary-foreground/75">
+            Organize produtos, personalize sua marca e compartilhe sua vitrine com clientes em poucos passos.
           </p>
-          <div className="flex flex-col gap-6">
-            <div className="flex items-start gap-6">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10">
-                <TrendingUp className="text-primary-foreground" />
-              </div>
-              <div>
-                <p className="font-bold">Acompanhamento de crescimento</p>
-                <p className="text-sm opacity-80">Veja seu progresso com dados claros e visuais.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-6">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10">
-                <Store className="text-primary-foreground" />
-              </div>
-              <div>
-                <p className="font-bold">Vitrine simples</p>
-                <p className="text-sm opacity-80">Digitalize seu negócio em minutos.</p>
-              </div>
-            </div>
+          <div className="mt-10 flex items-center gap-3 border-t border-primary-foreground/20 pt-5 text-sm text-primary-foreground/75">
+            <TrendingUp aria-hidden="true" />
+            Cresça com clareza, no seu ritmo.
           </div>
         </div>
-      </div>
+        <p className="text-xs text-primary-foreground/55">Feito para pequenos negócios.</p>
+      </aside>
 
-      {/* Login Form Side (Right) */}
-      <div className="flex w-full items-center justify-center p-6 md:w-1/2 md:p-10">
-        <div className="w-full max-w-md">
-          {/* Mobile Brand Identity */}
-          <div className="mb-8 text-center md:hidden">
-            <div className="mb-3 inline-flex size-12 items-center justify-center rounded-xl bg-primary">
-              <Store className="size-8 text-primary-foreground" />
+      <main className="flex w-full items-center justify-center p-5 sm:p-8 lg:w-[54%] lg:p-12">
+        <div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-lg shadow-primary/5 sm:p-9">
+          <div className="mb-8 lg:hidden">
+            <div className="flex items-center gap-2 font-heading text-lg font-semibold">
+              <span className="inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Store aria-hidden="true" /></span>
+              Vitrine
             </div>
-            <h2 className="text-3xl font-bold text-primary">Vitrine</h2>
           </div>
-
-          {/* Header */}
           <div className="mb-8">
-            <h2 className="mb-1 text-3xl font-semibold text-foreground">Bem-vindo de volta</h2>
-            <p className="text-muted-foreground">Digite seus dados para gerenciar sua loja.</p>
+            <p className="mb-2 text-sm font-medium text-primary">Área do lojista</p>
+            <h2 className="font-heading text-3xl font-semibold tracking-tight text-foreground">Bem-vindo de volta</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Entre para continuar cuidando da sua loja.</p>
           </div>
 
           <form
@@ -242,7 +223,7 @@ export function LoginForm({
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

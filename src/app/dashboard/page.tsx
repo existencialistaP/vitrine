@@ -36,7 +36,7 @@ export default async function DashboardPage() {
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1">
             <h1 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
-              Bem-vindo de volta 👋
+              Bem-vindo de volta
             </h1>
             <p className="text-sm text-muted-foreground">
               {nome} — tudo pronto para vender.
