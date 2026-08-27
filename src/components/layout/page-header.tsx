@@ -21,7 +21,7 @@ function PageHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="page-header"
       className={cn(
-        "flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        "flex w-full flex-col gap-4 rounded-xl border bg-card/80 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5",
         className
       )}
       {...props}
