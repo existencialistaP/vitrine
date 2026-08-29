@@ -6,11 +6,19 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Permite que telas públicas e o preview renderizem quando a integração ainda não foi injetada.
+  // Em produção, as variáveis são obrigatórias para proteger as rotas autenticadas.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({ request })
+  }
+
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
