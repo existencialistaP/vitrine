@@ -45,7 +45,7 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
         <CardContent className="grid gap-3 p-4 sm:p-6">
           <div className="flex items-center justify-between rounded-lg border bg-background p-3 text-sm"><span className="flex items-center gap-2 font-medium"><Layers3 className="size-4 text-primary" />Estrutura da página</span><span className="text-muted-foreground">{blocks.length}/{capabilities.maxBlocks} blocos</span></div>
           {blocks.map((block, index) => (
-            <button key={block.id} type="button" onClick={() => setSelectedId(block.id)} className={cn('flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/60', selectedId === block.id && 'border-primary bg-primary/5 ring-1 ring-primary')}>
+            <div key={block.id} role="button" tabIndex={0} onClick={() => setSelectedId(block.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedId(block.id) } }} className={cn('flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', selectedId === block.id && 'border-primary bg-primary/5 ring-1 ring-primary')}>
               <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted font-heading text-sm font-semibold">{icons[block.type]}</span>
               <span className="min-w-0 flex-1"><span className="block font-medium">{block.label}</span><span className="block truncate text-xs text-muted-foreground">{blockTypeLabel(block.type)} · {block.visible ? 'Visível' : 'Oculto'}</span></span>
               <span className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
@@ -55,7 +55,7 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
                 <Button variant="ghost" size="icon-sm" aria-label={block.visible ? 'Ocultar bloco' : 'Mostrar bloco'} onClick={() => setBlocks((current) => current.map((item) => item.id === block.id ? { ...item, visible: !item.visible } : item))}>{block.visible ? <EyeOff /> : <Eye />}</Button>
                 <Button variant="ghost" size="icon-sm" aria-label="Excluir bloco" onClick={() => setBlocks((current) => current.filter((item) => item.id !== block.id))}><Trash2 /></Button>
               </span>
-            </button>
+            </div>
           ))}
         </CardContent>
       </Card>
