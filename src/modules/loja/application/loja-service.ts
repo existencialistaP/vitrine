@@ -237,7 +237,7 @@ export class LojaService {
 
   private async salvarExperiencia(cmd: SalvarExperiencia): Promise<void> {
     const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
-    loja.alterarExperiencia(Experiencia.deBlocos(cmd.blocos));
+    loja.alterarExperiencia(Experiencia.dePaginas(cmd.paginas));
     await this.persistir(loja);
   }
 

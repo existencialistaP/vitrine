@@ -5,6 +5,7 @@ import { AdicionarProduto } from "@/modules/loja/application/commands/adicionar-
 import { AtualizarProduto } from "@/modules/loja/application/commands/atualizar-produto";
 import { RemoverProduto } from "@/modules/loja/application/commands/remover-produto";
 import { AlterarTema } from "@/modules/loja/application/commands/alterar-tema";
+import { SalvarExperiencia } from "@/modules/loja/application/commands/salvar-experiencia";
 import { SlugJaEmUso } from "@/modules/loja/domain/exceptions/slug-ja-em-uso";
 import { LojistaJaPossuiVitrine } from "@/modules/loja/domain/exceptions/lojista-ja-possui-vitrine";
 import { ProdutoNaoEncontrado } from "@/modules/loja/domain/exceptions/produto-nao-encontrado";
@@ -218,5 +219,33 @@ describe("LojaService (aplicação)", () => {
         whatsapp: "41999998888",
       })
     ).toThrow();
+  });
+
+  it("publica experiência v2 (páginas em blocos)", async () => {
+    const lojaId = await service.handle(
+      CriarLoja.from({ lojistaId: lojistaId(), nome: "Café da Esquina", whatsapp: "41999998888" })
+    );
+
+    await service.handle(
+      SalvarExperiencia.from({
+        lojaId: lojaId.toUUID(),
+        paginas: [
+          { id: "home-1", rotulo: "Home", ordem: 0, blocos: [{
+            id: "hero-1", type: "hero", label: "Hero", visible: true,
+            props: { title: "Cafés especiais" },
+          }] },
+          { id: "sobre-1", rotulo: "Sobre", ordem: 1, blocos: [{
+            id: "faq-1", type: "faq", label: "FAQ", visible: true,
+            props: { title: "Dúvidas", items: [{ pergunta: "Envia?", resposta: "Sim" }] },
+          }] },
+        ],
+      })
+    );
+
+    const loja = await repository.findById(lojaId);
+    const paginas = loja?.getExperiencia().getPaginas();
+    expect(paginas).toHaveLength(2);
+    expect(paginas?.[0].blocos[0].props.title).toBe("Cafés especiais");
+    expect(paginas?.[1].blocos[0].props.items).toHaveLength(1);
   });
 });
