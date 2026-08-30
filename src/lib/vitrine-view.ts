@@ -65,6 +65,9 @@ export function serializeVitrine(vitrine: VitrineCatalogo): VitrineView {
       imagemUrl: produto.imagemUrl?.getValue() ?? null,
       categoriaId: produto.categoriaId?.toUUID() ?? null,
     })),
-    blocos: initialBlocks,
+    blocos: (() => {
+      const blocos = vitrine.experiencia.getBlocos()
+      return blocos.length > 0 ? (blocos as ExperienceBlock[]) : initialBlocks
+    })(),
   }
 }

@@ -1,13 +1,20 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Layers3, Lock, Plus, Trash2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Spinner } from '@/components/ui/spinner'
+import { toast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
+import {
+  carregarExperienciaAction,
+  salvarExperienciaAction,
+} from '@/app/actions/experiencia'
 import { blockCatalog, blockTypeLabel, createBlock, duplicateBlock, initialBlocks, moveBlock, planCapabilities, type BlockType, type ExperienceBlock, type StorePlan } from '@/lib/experience'
 
 const icons: Record<BlockType, string> = {
@@ -15,18 +22,63 @@ const icons: Record<BlockType, string> = {
 }
 
 export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
+  const router = useRouter()
   const [blocks, setBlocks] = useState<ExperienceBlock[]>(initialBlocks)
   const [selectedId, setSelectedId] = useState(initialBlocks[0].id)
   const [published, setPublished] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const capabilities = planCapabilities[plan]
   const selected = blocks.find((block) => block.id === selectedId)
   const grouped = useMemo(() => ({ essential: blockCatalog.filter((block) => block.plan === 'ESSENCIAL'), advanced: blockCatalog.filter((block) => block.plan === 'LIVRE') }), [])
+
+  // Carrega a experiência já publicada (ou o template inicial).
+  useEffect(() => {
+    let ativo = true
+    carregarExperienciaAction()
+      .then((resultado) => {
+        if (!ativo) return
+        if (resultado.ok) {
+          setBlocks(resultado.blocos)
+          setSelectedId(resultado.blocos[0]?.id ?? '')
+          setPublished(true)
+        }
+      })
+      .finally(() => {
+        if (ativo) setIsLoading(false)
+      })
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   function add(type: BlockType) {
     if (blocks.length >= capabilities.maxBlocks) return
     const block = createBlock(type)
     setBlocks((current) => [...current, block])
     setSelectedId(block.id)
+  }
+
+  async function publicar() {
+    setIsSaving(true)
+    setError(null)
+    try {
+      const resultado = await salvarExperienciaAction(blocks)
+      if (!resultado.ok) {
+        setError(resultado.error)
+        return
+      }
+      setPublished(true)
+      toast.add({
+        title: 'Vitrine publicada',
+        description: 'Sua página foi atualizada.',
+        type: 'success',
+      })
+      router.refresh()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -39,9 +91,19 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
               <CardTitle className="text-xl">Home de catálogo</CardTitle>
               <CardDescription>Organize a experiência da sua loja em blocos.</CardDescription>
             </div>
-            <div className="flex gap-2"><Button variant="outline" size="sm"><Eye data-icon="inline-start" />Preview</Button><Button size="sm" onClick={() => setPublished(true)}>Publicar</Button></div>
+            <div className="flex gap-2"><Button variant="outline" size="sm"><Eye data-icon="inline-start" />Preview</Button><Button size="sm" onClick={publicar} disabled={isLoading || isSaving}>{isSaving ? <Spinner data-icon="inline-start" /> : null}{isSaving ? 'Publicando...' : 'Publicar'}</Button></div>
           </div>
         </CardHeader>
+        {error && (
+          <div className="border-b bg-destructive/5 px-6 py-3 text-sm text-destructive">
+            Não foi possível publicar: {error}
+          </div>
+        )}
+        {isLoading ? (
+          <CardContent className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
+            <Spinner data-icon="inline-start" /> Carregando sua vitrine...
+          </CardContent>
+        ) : (
         <CardContent className="grid gap-3 p-4 sm:p-6">
           <div className="flex items-center justify-between rounded-lg border bg-background p-3 text-sm"><span className="flex items-center gap-2 font-medium"><Layers3 className="size-4 text-primary" />Estrutura da página</span><span className="text-muted-foreground">{blocks.length}/{capabilities.maxBlocks} blocos</span></div>
           {blocks.map((block, index) => (
@@ -58,6 +120,7 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
             </div>
           ))}
         </CardContent>
+        )}
       </Card>
       <div className="flex flex-col gap-6">
         <Card><CardHeader><CardTitle className="text-base">Adicionar bloco</CardTitle><CardDescription>Comece por um bloco essencial ou expanda sua narrativa.</CardDescription></CardHeader><CardContent className="flex flex-col gap-5">

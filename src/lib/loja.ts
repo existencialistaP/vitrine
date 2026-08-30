@@ -10,6 +10,7 @@ import { Email } from "@/kernel/vos/email"
 import { AuthUserId } from "@/modules/lojista/domain/vos/auth-user-id"
 import { Container } from "@/infrastructure/di/container"
 import { CadastrarLojista } from "@/modules/lojista/application/commands/cadastrar-lojista"
+import { VincularAutenticacao } from "@/modules/lojista/application/commands/vincular-autenticacao"
 import type { Loja } from "@/modules/loja/domain/loja"
 
 export const container = new Container()
@@ -48,14 +49,48 @@ export const getLojista = cache(async (user: User): Promise<Lojista | null> => {
   }
 
   if (data) {
-    return Lojista.reconstruir({
-      id: LojistaId.fromString(data.id),
-      authUserId: AuthUserId.of(data.authUserId),
-      nome: NomeLojista.of(data.nome),
-      email: Email.of(data.email),
-      telefone: null,
-      version: null,
-    })
+    try {
+      return Lojista.reconstruir({
+        id: LojistaId.fromString(data.id),
+        authUserId: AuthUserId.of(data.authUserId),
+        nome: NomeLojista.of(data.nome),
+        email: Email.of(data.email),
+        telefone: null,
+        version: null,
+      })
+    } catch (erro) {
+      console.error(
+        "[v0] Perfil do lojista com dados inválidos; redirecionando",
+        erro instanceof Error ? erro.message : erro
+      )
+      return null
+    }
+  }
+
+  // Perfil já existe, mas vinculado a outro authUserId (por exemplo, após uma
+  // troca de instância/ambiente): assume o perfil pelo e-mail em vez de
+  // duplicar (que lançaria EmailJaCadastrado) e religa a autenticação.
+  if (user.email) {
+    try {
+      const existente = await container.lojistaService.buscarPorEmail(
+        Email.of(user.email)
+      )
+      if (existente) {
+        const vinculado = await container.lojistaService
+          .buscarPorAuthUserId(user.id)
+        if (!vinculado) {
+          await container.lojistaService.handleVincularAutenticacao(
+            VincularAutenticacao.from({
+              lojistaId: existente.getId().toUUID(),
+              authUserId: user.id,
+            })
+          )
+        }
+        return existente
+      }
+    } catch {
+      // fluxo abaixo tenta a criação normal
+    }
   }
 
   const nome =
@@ -86,7 +121,15 @@ export const getMinhaLoja = cache(async (): Promise<Loja | null> => {
   const lojista = await getLojista(user)
   if (!lojista) return null
 
-  return container.lojaService.buscarPorLojistaId(lojista.getId().toUUID())
+  try {
+    return container.lojaService.buscarPorLojistaId(lojista.getId().toUUID())
+  } catch (erro) {
+    console.error(
+      "[v0] Vitrine com dados inválidos; redirecionando",
+      erro instanceof Error ? erro.message : erro
+    )
+    return null
+  }
 })
 
 /** Exige lojista; redireciona para /auth/login quando não autenticado. */

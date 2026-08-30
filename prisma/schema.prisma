@@ -46,6 +46,9 @@ model Loja {
   temaFonte       String  @default("SANS")
   temaLogoUrl     String?
 
+  /// Página da vitrine em blocos (construtor da vitrine): lista de ExperienceBlock
+  experiencia Json?
+
   /// Lock otimista (espelho do @Version)
   versao      Int      @default(1)
   criadoEm    DateTime @default(now())

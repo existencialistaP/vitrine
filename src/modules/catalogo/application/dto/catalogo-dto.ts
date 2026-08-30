@@ -11,6 +11,7 @@ import type { IdentidadeVisual } from "@/modules/loja/domain/vos/identidade-visu
 import type { Preco } from "@/modules/loja/domain/vos/preco";
 import type { Ordem } from "@/modules/loja/domain/vos/ordem";
 import type { Url } from "@/modules/loja/domain/vos/url";
+import type { Experiencia } from "@/modules/loja/domain/vos/experiencia";
 
 /** Produto exibido no catálogo público (somente disponíveis). */
 export interface ProdutoCatalogo {
@@ -38,6 +39,7 @@ export interface VitrineCatalogo {
   readonly descricao: Descricao;
   readonly whatsapp: Whatsapp;
   readonly tema: IdentidadeVisual;
+  readonly experiencia: Experiencia;
   readonly categorias: readonly CategoriaCatalogo[];
   readonly produtos: readonly ProdutoCatalogo[];
 }

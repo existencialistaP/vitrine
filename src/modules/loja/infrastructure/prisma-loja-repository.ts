@@ -21,6 +21,7 @@ import { Ordem } from "../domain/vos/ordem";
 import { Url } from "../domain/vos/url";
 import { Fonte, parseFonte } from "../domain/vos/fonte";
 import { IdentidadeVisual } from "../domain/vos/identidade-visual";
+import { Experiencia } from "../domain/vos/experiencia";
 import { DisponibilidadeValue } from "../domain/vos/disponibilidade";
 
 type LinhaLoja = Prisma.LojaGetPayload<{
@@ -197,6 +198,7 @@ export class PrismaLojaRepository implements LojaRepository {
       temaLayout: tema.getLayout(),
       temaFonte: tema.getFonte(),
       temaLogoUrl: tema.getLogoUrl()?.getValue() ?? null,
+      experiencia: loja.getExperiencia().paraJson() as unknown as Prisma.InputJsonValue,
       versao: loja.getVersion() ?? 1,
     };
   }
@@ -218,6 +220,7 @@ export class PrismaLojaRepository implements LojaRepository {
         fonte: parseFonte(linha.temaFonte) ?? Fonte.SANS,
         logoUrl: linha.temaLogoUrl !== null ? Url.of(linha.temaLogoUrl) : null,
       }),
+      experiencia: Experiencia.deJson(linha.experiencia),
       produtos: linha.produtos.map((p) =>
         Produto.of({
           id: ProdutoId.fromString(p.id),

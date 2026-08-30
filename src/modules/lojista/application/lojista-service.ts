@@ -47,6 +47,10 @@ export class LojistaService {
     return this.repository.findByAuthUserId(AuthUserId.of(authUserId));
   }
 
+  async buscarPorEmail(email: Email): Promise<Lojista | null> {
+    return this.repository.findByEmail(email);
+  }
+
   async buscarPorId(id: LojistaId): Promise<Lojista | null> {
     return this.repository.findById(id);
   }
