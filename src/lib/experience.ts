@@ -1,25 +1,14 @@
-import { z } from 'zod'
-
 import {
-  blockTypes,
   type BlockType,
   type BlocoExperiencia,
   type PaginaExperiencia,
 } from '@/modules/loja/domain/vos/experiencia'
 
 export type { BlockType, BlocoExperiencia, PaginaExperiencia } from '@/modules/loja/domain/vos/experiencia'
-export { blockTypes, propSchemas } from '@/modules/loja/domain/vos/experiencia'
+export { propSchemas } from '@/modules/loja/domain/vos/experiencia'
 export type ExperienceBlock = BlocoExperiencia
 
 export type StorePlan = 'ESSENCIAL' | 'LIVRE'
-
-export const blockSchema = z.object({
-  id: z.string(),
-  type: z.enum(blockTypes),
-  label: z.string(),
-  visible: z.boolean(),
-  props: z.record(z.string(), z.unknown()),
-})
 
 export const initialBlocks: ExperienceBlock[] = [
   { id: 'hero-1', type: 'hero', label: 'Apresentação da marca', visible: true, props: { title: 'Sua marca, do seu jeito', description: 'Conte a história e mostre o que torna sua loja especial.', action: 'Ver produtos' } },
