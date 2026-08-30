@@ -67,19 +67,16 @@ export function duplicateBlock(blocks: ExperienceBlock[], id: string) {
   return [...blocks.slice(0, index + 1), copy, ...blocks.slice(index + 1)]
 }
 
-export function resolveProductSection(
-  products: Array<{
+export function resolveProductSection<
+  T extends {
     id: string
     nome: string
     precoCents: number
-    imagemUrl?: string | null
-    precoFormatado?: string
     categoriaId: string | null
     disponivel?: boolean
     criadoEm?: string
-  }>,
-  props: Record<string, unknown>
-) {
+  }
+>(products: Array<T>, props: Record<string, unknown>): T[] {
   const manualIds = Array.isArray(props.manualIds) ? props.manualIds.filter((id): id is string => typeof id === 'string') : []
   const categoryId = typeof props.categoryId === 'string' ? props.categoryId : null
   const limit = typeof props.limit === 'number' ? Math.max(1, Math.min(props.limit, 50)) : 8
@@ -88,7 +85,9 @@ export function resolveProductSection(
 
   const eligible = products.filter((product) => product.disponivel !== false && (!categoryId || product.categoriaId === categoryId))
 
-  const manual = manualIds.map((id) => eligible.find((product) => product.id === id)).filter(Boolean)
+  const manual = manualIds
+    .map((id) => eligible.find((product) => product.id === id))
+    .filter((product): product is (typeof eligible)[number] => product !== undefined)
 
   const compor = (a: { precoCents: number; nome: string; criadoEm?: string }, b: { precoCents: number; nome: string; criadoEm?: string }) => {
     if (order === 'priceAsc') return a.precoCents - b.precoCents
