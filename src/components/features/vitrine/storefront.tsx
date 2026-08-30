@@ -124,7 +124,7 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
 
       <main className="mx-auto w-full max-w-5xl px-4 pb-20 sm:px-6">
         <ExperienceRenderer
-          blocks={vitrine.blocos}
+          blocks={vitrine.paginas[0]?.blocos ?? []}
           vitrine={vitrine}
           onAdd={adicionar}
         />

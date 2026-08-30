@@ -40,8 +40,9 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
       .then((resultado) => {
         if (!ativo) return
         if (resultado.ok) {
-          setBlocks(resultado.blocos)
-          setSelectedId(resultado.blocos[0]?.id ?? '')
+          const primeira = resultado.paginas[0]
+          setBlocks(primeira?.blocos ?? [])
+          setSelectedId(primeira?.blocos[0]?.id ?? '')
           setPublished(true)
         }
       })

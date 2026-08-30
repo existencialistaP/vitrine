@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import type { PaginaExperiencia } from '@/modules/loja/domain/vos/experiencia'
+
+export type { PaginaExperiencia }
 
 export const blockTypes = [
   'hero',
@@ -106,3 +109,7 @@ export function pageTemplates() {
     { id: 'promotion', label: 'Landing promocional', description: 'Banner, coleção filtrada e CTA.', blocks: [createBlock('banner'), initialBlocks[2], createBlock('cta')] },
   ]
 }
+
+export const initialPages: PaginaExperiencia[] = [
+  { id: 'home-1', rotulo: 'Home', ordem: 0, blocos: initialBlocks },
+]
