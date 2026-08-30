@@ -20,6 +20,7 @@ import { Preco } from "../domain/vos/preco";
 import { Ordem } from "../domain/vos/ordem";
 import { Url } from "../domain/vos/url";
 import { IdentidadeVisual } from "../domain/vos/identidade-visual";
+import { Experiencia } from "../domain/vos/experiencia";
 import { DisponibilidadeValue } from "../domain/vos/disponibilidade";
 import { CriarLoja } from "./commands/criar-loja";
 import { AdicionarProduto } from "./commands/adicionar-produto";
@@ -32,6 +33,7 @@ import { RenomearCategoria } from "./commands/renomear-categoria";
 import { ReposicionarCategoria } from "./commands/reposicionar-categoria";
 import { RemoverCategoria } from "./commands/remover-categoria";
 import { AlterarDadosLoja } from "./commands/alterar-dados-loja";
+import { SalvarExperiencia } from "./commands/salvar-experiencia";
 
 /**
  * Serviço de aplicação da vitrine. Orquestra o agregado {@link Loja}, aplica as
@@ -55,6 +57,7 @@ export class LojaService {
   async handle(cmd: ReposicionarCategoria): Promise<void>;
   async handle(cmd: RemoverCategoria): Promise<void>;
   async handle(cmd: AlterarDadosLoja): Promise<void>;
+  async handle(cmd: SalvarExperiencia): Promise<void>;
   async handle(
     cmd:
       | CriarLoja
@@ -68,6 +71,7 @@ export class LojaService {
       | ReposicionarCategoria
       | RemoverCategoria
       | AlterarDadosLoja
+      | SalvarExperiencia
   ): Promise<LojaId | ProdutoId | void> {
     if (cmd instanceof CriarLoja) return this.criarLoja(cmd);
     if (cmd instanceof AdicionarProduto) return this.adicionarProduto(cmd);
@@ -79,6 +83,7 @@ export class LojaService {
     if (cmd instanceof RenomearCategoria) return this.renomearCategoria(cmd);
     if (cmd instanceof ReposicionarCategoria) return this.reposicionarCategoria(cmd);
     if (cmd instanceof RemoverCategoria) return this.removerCategoria(cmd);
+    if (cmd instanceof SalvarExperiencia) return this.salvarExperiencia(cmd);
     return this.alterarDadosLoja(cmd);
   }
 
@@ -227,6 +232,12 @@ export class LojaService {
   private async removerCategoria(cmd: RemoverCategoria): Promise<void> {
     const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
     loja.removerCategoria(CategoriaId.fromString(cmd.categoriaId));
+    await this.persistir(loja);
+  }
+
+  private async salvarExperiencia(cmd: SalvarExperiencia): Promise<void> {
+    const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
+    loja.alterarExperiencia(Experiencia.dePaginas(cmd.paginas));
     await this.persistir(loja);
   }
 

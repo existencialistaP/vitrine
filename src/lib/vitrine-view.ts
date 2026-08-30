@@ -1,5 +1,5 @@
 import type { VitrineCatalogo } from "@/modules/catalogo/application/dto/catalogo-dto"
-import { initialBlocks, type ExperienceBlock } from "@/lib/experience"
+import { initialPages, type PaginaExperiencia } from "@/lib/experience"
 import { obterPaleta } from "@/lib/visual"
 
 /** Representação serializável da vitrine para componentes client. */
@@ -30,10 +30,13 @@ export type VitrineView = {
     imagemUrl: string | null
     categoriaId: string | null
   }[]
-  blocos: ExperienceBlock[]
+  paginas: PaginaExperiencia[]
 }
 
-export function serializeVitrine(vitrine: VitrineCatalogo): VitrineView {
+/** Representação serializável dos dados fixos da vitrine (sem as páginas). */
+export type VitrineBase = Omit<VitrineView, "paginas">
+
+export function serializeVitrineBase(vitrine: VitrineCatalogo): VitrineBase {
   const paleta = obterPaleta(vitrine.tema.getPaleta())
   return {
     nome: vitrine.nome.getValue(),
@@ -65,6 +68,13 @@ export function serializeVitrine(vitrine: VitrineCatalogo): VitrineView {
       imagemUrl: produto.imagemUrl?.getValue() ?? null,
       categoriaId: produto.categoriaId?.toUUID() ?? null,
     })),
-    blocos: initialBlocks,
+  }
+}
+
+export function serializeVitrine(vitrine: VitrineCatalogo): VitrineView {
+  const paginas = vitrine.experiencia.getPaginas()
+  return {
+    ...serializeVitrineBase(vitrine),
+    paginas: (paginas.length > 0 ? paginas : initialPages) as PaginaExperiencia[],
   }
 }

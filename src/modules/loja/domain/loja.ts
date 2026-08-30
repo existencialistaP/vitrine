@@ -21,6 +21,7 @@ import type { Descricao } from "./vos/descricao";
 import type { Slug } from "./vos/slug";
 import type { Whatsapp } from "./vos/whatsapp";
 import { IdentidadeVisual } from "./vos/identidade-visual";
+import { Experiencia } from "./vos/experiencia";
 import type { NomeCategoria } from "./vos/nome-categoria";
 import type { Ordem } from "./vos/ordem";
 import { DisponibilidadeValue } from "./vos/disponibilidade";
@@ -40,6 +41,7 @@ export class Loja extends AggregateRoot<LojaId> {
   private whatsapp: Whatsapp;
   private status: StatusLoja;
   private tema: IdentidadeVisual;
+  private experiencia: Experiencia;
   private readonly produtos: Produto[] = [];
   private readonly categorias: Categoria[] = [];
 
@@ -52,6 +54,7 @@ export class Loja extends AggregateRoot<LojaId> {
     whatsapp: Whatsapp;
     status?: StatusLoja;
     tema?: IdentidadeVisual;
+    experiencia?: Experiencia;
     produtos?: Produto[];
     categorias?: Categoria[];
     version?: number | null;
@@ -64,6 +67,7 @@ export class Loja extends AggregateRoot<LojaId> {
     this.whatsapp = params.whatsapp;
     this.status = params.status ?? Status.ATIVA;
     this.tema = params.tema ?? IdentidadeVisual.padrao();
+    this.experiencia = params.experiencia ?? Experiencia.vazia();
     if (params.produtos) this.produtos.push(...params.produtos);
     if (params.categorias) this.categorias.push(...params.categorias);
   }
@@ -95,6 +99,7 @@ export class Loja extends AggregateRoot<LojaId> {
     whatsapp: Whatsapp;
     status: StatusLoja;
     tema: IdentidadeVisual;
+    experiencia?: Experiencia;
     produtos: Produto[];
     categorias: Categoria[];
     version: number | null;
@@ -128,6 +133,15 @@ export class Loja extends AggregateRoot<LojaId> {
 
   getTema(): IdentidadeVisual {
     return this.tema;
+  }
+
+  getExperiencia(): Experiencia {
+    return this.experiencia;
+  }
+
+  /** Publica a experiência (página em blocos) da vitrine. */
+  alterarExperiencia(experiencia: Experiencia): void {
+    this.experiencia = experiencia;
   }
 
   getProdutos(): readonly Produto[] {

@@ -13,6 +13,7 @@ import { Ordem } from "@/modules/loja/domain/vos/ordem";
 import { Url } from "@/modules/loja/domain/vos/url";
 import { Fonte, parseFonte } from "@/modules/loja/domain/vos/fonte";
 import { IdentidadeVisual } from "@/modules/loja/domain/vos/identidade-visual";
+import { Experiencia } from "@/modules/loja/domain/vos/experiencia";
 import type { CatalogoRepository } from "../application/catalogo-repository";
 import type { VitrineCatalogo } from "../application/dto/catalogo-dto";
 
@@ -77,6 +78,7 @@ export class PrismaCatalogoRepository implements CatalogoRepository {
         fonte: parseFonte(linha.temaFonte) ?? Fonte.SANS,
         logoUrl: linha.temaLogoUrl !== null ? Url.of(linha.temaLogoUrl) : null,
       }),
+      experiencia: Experiencia.deJson(linha.experiencia),
       categorias: linha.categorias.map((c) => ({
         categoriaId: CategoriaId.fromString(c.id),
         nome: NomeCategoria.of(c.nome),
