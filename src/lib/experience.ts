@@ -1,25 +1,16 @@
 import { z } from 'zod'
-import type { PaginaExperiencia } from '@/modules/loja/domain/vos/experiencia'
 
-export type { PaginaExperiencia }
+import {
+  blockTypes,
+  type BlockType,
+  type BlocoExperiencia,
+  type PaginaExperiencia,
+} from '@/modules/loja/domain/vos/experiencia'
 
-export const blockTypes = [
-  'hero',
-  'richText',
-  'imageText',
-  'productCollection',
-  'categoryCollection',
-  'about',
-  'banner',
-  'cta',
-  'testimonials',
-  'faq',
-  'gallery',
-  'spacer',
-  'divider',
-] as const
+export type { BlockType, BlocoExperiencia, PaginaExperiencia } from '@/modules/loja/domain/vos/experiencia'
+export { blockTypes, propSchemas } from '@/modules/loja/domain/vos/experiencia'
+export type ExperienceBlock = BlocoExperiencia
 
-export type BlockType = (typeof blockTypes)[number]
 export type StorePlan = 'ESSENCIAL' | 'LIVRE'
 
 export const blockSchema = z.object({
@@ -29,8 +20,6 @@ export const blockSchema = z.object({
   visible: z.boolean(),
   props: z.record(z.string(), z.unknown()),
 })
-
-export type ExperienceBlock = z.infer<typeof blockSchema>
 
 export const initialBlocks: ExperienceBlock[] = [
   { id: 'hero-1', type: 'hero', label: 'Apresentação da marca', visible: true, props: { title: 'Sua marca, do seu jeito', description: 'Conte a história e mostre o que torna sua loja especial.', action: 'Ver produtos' } },
@@ -78,20 +67,43 @@ export function duplicateBlock(blocks: ExperienceBlock[], id: string) {
   return [...blocks.slice(0, index + 1), copy, ...blocks.slice(index + 1)]
 }
 
-export function resolveProductSection(products: Array<{ id: string; nome: string; precoCents: number; categoriaId: string | null; disponivel?: boolean; criadoEm?: string }>, props: Record<string, unknown>) {
+export function resolveProductSection(
+  products: Array<{
+    id: string
+    nome: string
+    precoCents: number
+    imagemUrl?: string | null
+    precoFormatado?: string
+    categoriaId: string | null
+    disponivel?: boolean
+    criadoEm?: string
+  }>,
+  props: Record<string, unknown>
+) {
   const manualIds = Array.isArray(props.manualIds) ? props.manualIds.filter((id): id is string => typeof id === 'string') : []
   const categoryId = typeof props.categoryId === 'string' ? props.categoryId : null
   const limit = typeof props.limit === 'number' ? Math.max(1, Math.min(props.limit, 50)) : 8
   const order = props.order
+  const mode = props.mode === 'manual' || props.mode === 'automatic' || props.mode === 'hybrid' ? props.mode : 'hybrid'
+
   const eligible = products.filter((product) => product.disponivel !== false && (!categoryId || product.categoriaId === categoryId))
+
   const manual = manualIds.map((id) => eligible.find((product) => product.id === id)).filter(Boolean)
-  const automatic = eligible.filter((product) => !manualIds.includes(product.id)).sort((a, b) => {
+
+  const compor = (a: { precoCents: number; nome: string; criadoEm?: string }, b: { precoCents: number; nome: string; criadoEm?: string }) => {
     if (order === 'priceAsc') return a.precoCents - b.precoCents
     if (order === 'priceDesc') return b.precoCents - a.precoCents
     if (order === 'name') return a.nome.localeCompare(b.nome)
     return (b.criadoEm ?? '').localeCompare(a.criadoEm ?? '')
-  })
-  return [...manual, ...automatic].slice(0, limit)
+  }
+
+  const semManuais = eligible.filter((product) => !manualIds.includes(product.id)).sort(compor)
+
+  if (mode === 'manual') return manual.slice(0, limit)
+  if (mode === 'automatic') return semManuais.slice(0, limit)
+
+  const restante = Math.max(0, limit - manual.length)
+  return [...manual, ...semManuais.slice(0, restante)]
 }
 
 export function blockTypeLabel(type: BlockType) {
@@ -102,11 +114,11 @@ export function createBlock(type: BlockType): ExperienceBlock {
   return { id: `${type}-${Date.now()}`, type, label: blockTypeLabel(type), visible: true, props: {} }
 }
 
-export function pageTemplates() {
+export function templates(): { id: string; label: string; description: string; paginas: PaginaExperiencia[] }[] {
   return [
-    { id: 'catalog', label: 'Home de catálogo', description: 'Hero, categorias, produtos e CTA.', blocks: initialBlocks },
-    { id: 'about', label: 'Sobre nós', description: 'Uma página para história e valores.', blocks: [initialBlocks[0], initialBlocks[3]] },
-    { id: 'promotion', label: 'Landing promocional', description: 'Banner, coleção filtrada e CTA.', blocks: [createBlock('banner'), initialBlocks[2], createBlock('cta')] },
+    { id: 'catalog', label: 'Home de catálogo', description: 'Hero, categorias, produtos e CTA.', paginas: initialPages },
+    { id: 'sobre', label: 'Sobre nós', description: 'Uma página para história e valores.', paginas: [{ id: 'sobre-1', rotulo: 'Sobre', ordem: 0, blocos: [initialBlocks[0], initialBlocks[3]] }] },
+    { id: 'promocao', label: 'Landing promocional', description: 'Banner, coleção filtrada e CTA.', paginas: [{ id: 'promo-1', rotulo: 'Promoção', ordem: 0, blocos: [createBlock('banner'), initialBlocks[2], createBlock('cta')] }] },
   ]
 }
 
