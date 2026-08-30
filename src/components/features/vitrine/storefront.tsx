@@ -2,24 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
-  MessageCircle,
   ShoppingBag,
   Store,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@/components/ui/toggle-group'
-import { cn } from '@/lib/utils'
 import type { VitrineView } from '@/lib/vitrine-view'
-import { classeEstiloCard, classeLayout, obterFonte, obterFormatoCard } from '@/lib/visual'
-import { Layout } from '@/modules/loja/domain/vos/identidade-visual'
+import { obterFonte } from '@/lib/visual'
 
+import { ExperienceRenderer } from './experience-renderer'
 import { OrderSheet } from './order-sheet'
-import { ProductCard } from './product-card'
 
 type ItemCarrinho = {
   id: string
@@ -30,16 +23,10 @@ type ItemCarrinho = {
 }
 
 export function Storefront({ vitrine }: { vitrine: VitrineView }) {
-  const [categoriaAtiva, setCategoriaAtiva] = useState<string>('todas')
   const [carrinho, setCarrinho] = useState<Record<string, ItemCarrinho>>({})
   const [sheetAberto, setSheetAberto] = useState(false)
 
   const cssFonte = obterFonte(vitrine.tema.fonte).css
-  const aspectoCard = obterFormatoCard(vitrine.tema.formatoCard).aspecto
-  const classeCard = classeEstiloCard(vitrine.tema.estilo)
-  const gridClass = classeLayout(vitrine.tema.layout)
-  const ehLista = vitrine.tema.layout === Layout.LISTA
-  const ehDestaque = vitrine.tema.layout === Layout.DESTAQUE
 
   useEffect(() => {
     const raiz = document.documentElement
@@ -52,13 +39,6 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
       raiz.style.removeProperty('--vitrine-bg')
     }
   }, [vitrine.tema])
-
-  const produtosFiltrados = useMemo(() => {
-    if (categoriaAtiva === 'todas') return vitrine.produtos
-    return vitrine.produtos.filter(
-      (produto) => produto.categoriaId === categoriaAtiva
-    )
-  }, [categoriaAtiva, vitrine.produtos])
 
   const itensCarrinho = useMemo(
     () => Object.values(carrinho),
@@ -143,81 +123,11 @@ export function Storefront({ vitrine }: { vitrine: VitrineView }) {
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-4 pb-20 sm:px-6">
-        {/* Hero */}
-        <section className="flex flex-col items-center gap-5 py-12 text-center sm:py-16">
-          <h1 className="max-w-2xl font-heading text-4xl font-bold tracking-tight sm:text-5xl">
-            {vitrine.nome}
-          </h1>
-          {vitrine.descricao && (
-            <p className="max-w-xl text-balance text-base text-muted-foreground sm:text-lg">
-              {vitrine.descricao}
-            </p>
-          )}
-          <a
-            href={vitrine.whatsappLink}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2"
-          >
-            <Button
-              variant="default"
-              size="lg"
-              className="gap-2"
-            >
-              <MessageCircle data-icon="inline-start" />
-              Chamar no WhatsApp
-            </Button>
-          </a>
-        </section>
-
-        {/* Categorias */}
-        {vitrine.categorias.length > 0 && (
-          <div className="mb-10 flex justify-center">
-            <ToggleGroup
-              className="flex-wrap justify-center"
-              spacing={1}
-              value={[categoriaAtiva]}
-              onValueChange={(valores) => {
-                setCategoriaAtiva(valores[0] ?? 'todas')
-              }}
-            >
-              <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
-              {vitrine.categorias.map((categoria) => (
-                <ToggleGroupItem key={categoria.id} value={categoria.id}>
-                  {categoria.nome}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-        )}
-
-        {/* Produtos */}
-        {ehDestaque && produtosFiltrados.length > 0 && (
-          <div className="mb-4">
-            <ProductCard
-              produto={produtosFiltrados[0]}
-              onAdicionar={adicionar}
-              aspecto="aspect-[16/9] sm:aspect-[2/1]"
-              classeCard="rounded-2xl"
-              horizontal
-              destaque
-            />
-          </div>
-        )}
-        <div className={cn('grid', gridClass)}>
-          {produtosFiltrados
-            .slice(ehDestaque ? 1 : 0)
-            .map((produto) => (
-              <ProductCard
-                key={produto.id}
-                produto={produto}
-                onAdicionar={adicionar}
-                aspecto={aspectoCard}
-                classeCard={classeCard}
-                horizontal={ehLista}
-              />
-            ))}
-        </div>
+        <ExperienceRenderer
+          blocks={vitrine.blocos}
+          vitrine={vitrine}
+          onAdd={adicionar}
+        />
       </main>
 
       <OrderSheet

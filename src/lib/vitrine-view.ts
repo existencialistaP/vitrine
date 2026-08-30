@@ -1,4 +1,5 @@
 import type { VitrineCatalogo } from "@/modules/catalogo/application/dto/catalogo-dto"
+import { initialBlocks, type ExperienceBlock } from "@/lib/experience"
 import { obterPaleta } from "@/lib/visual"
 
 /** Representação serializável da vitrine para componentes client. */
@@ -29,6 +30,7 @@ export type VitrineView = {
     imagemUrl: string | null
     categoriaId: string | null
   }[]
+  blocos: ExperienceBlock[]
 }
 
 export function serializeVitrine(vitrine: VitrineCatalogo): VitrineView {
@@ -63,5 +65,6 @@ export function serializeVitrine(vitrine: VitrineCatalogo): VitrineView {
       imagemUrl: produto.imagemUrl?.getValue() ?? null,
       categoriaId: produto.categoriaId?.toUUID() ?? null,
     })),
+    blocos: initialBlocks,
   }
 }
