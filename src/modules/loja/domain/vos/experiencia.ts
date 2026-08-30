@@ -158,6 +158,7 @@ export class Experiencia implements ValueObject {
   static deJson(valor: unknown): Experiencia {
     if (valor === null || valor === undefined) return Experiencia.vazia();
     if (Array.isArray(valor)) {
+      if (valor.length === 0) return Experiencia.vazia();
       try {
         const blocos = valor.map((bloco) => BlocoSchema.parse(bloco));
         return Experiencia.dePaginas([

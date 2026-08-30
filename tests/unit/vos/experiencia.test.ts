@@ -29,6 +29,12 @@ describe("Experiencia (documento v2)", () => {
     expect(Experiencia.deJson(null).isEmpty()).toBe(true);
   });
 
+  it("deJson([]) é vazia (v1 vazio → fallback initialPages)", () => {
+    const experiencia = Experiencia.deJson([]);
+    expect(experiencia.isEmpty()).toBe(true);
+    expect(experiencia.getPaginas()).toHaveLength(0);
+  });
+
   it("migra array legado v1 para uma página Home", () => {
     const experiencia = Experiencia.deJson([bloco()]);
     const paginas = experiencia.getPaginas();
