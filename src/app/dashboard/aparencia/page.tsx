@@ -1,4 +1,6 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ExperienceBuilder } from '@/components/features/aparencia/experience-builder'
+import { TemaForm } from '@/components/features/aparencia/tema-form'
 import {
   PageHeader,
   PageHeaderContent,
@@ -17,7 +19,18 @@ export default function AparenciaPage() {
           </PageHeaderDescription>
         </PageHeaderContent>
       </PageHeader>
-      <ExperienceBuilder />
+      <Tabs defaultValue="construtor">
+        <TabsList>
+          <TabsTrigger value="construtor">Construtor</TabsTrigger>
+          <TabsTrigger value="aparencia">Aparência</TabsTrigger>
+        </TabsList>
+        <TabsContent value="construtor">
+          <ExperienceBuilder />
+        </TabsContent>
+        <TabsContent value="aparencia">
+          <TemaForm />
+        </TabsContent>
+      </Tabs>
     </>
   )
 }

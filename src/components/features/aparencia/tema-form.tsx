@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
@@ -8,6 +8,7 @@ import { Check, Store } from 'lucide-react'
 import * as z from 'zod'
 
 import { alterarTemaAction } from '@/app/actions/loja'
+import { carregarTemaAction, type TemaView } from '@/app/actions/tema'
 import {
   Alert,
   AlertDescription,
@@ -28,6 +29,7 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import { UploadImagem } from '@/components/patterns/upload-imagem'
 import { cn } from '@/lib/utils'
@@ -53,15 +55,6 @@ const temaSchema = z.object({
 })
 
 type TemaValues = z.infer<typeof temaSchema>
-
-type TemaView = {
-  paleta: string
-  estilo: string
-  formatoCard: string
-  layout: string
-  fonte: TemaValues['fonte']
-  logoUrl: string | null
-}
 
 function CartaoOpcao({
   selecionado,
@@ -181,21 +174,50 @@ function TituloGrupo({ titulo, descricao }: { titulo: string; descricao: string 
   )
 }
 
-export function TemaForm({ tema }: { tema: TemaView }) {
+export function TemaForm({ tema: temaInicial }: { tema?: TemaView }) {
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [logoUrl, setLogoUrl] = useState(temaInicial?.logoUrl ?? null)
 
   const form = useForm<TemaValues>({
     resolver: zodResolver(temaSchema),
     defaultValues: {
-      paleta: tema.paleta,
-      estilo: tema.estilo,
-      formatoCard: tema.formatoCard,
-      layout: tema.layout,
-      fonte: tema.fonte,
-      logoUrl: tema.logoUrl ?? '',
+      paleta: '',
+      estilo: '',
+      formatoCard: '',
+      layout: '',
+      fonte: 'SANS',
+      logoUrl: '',
     },
   })
+
+  useEffect(() => {
+    let ativo = true
+    carregarTemaAction()
+      .then((resultado) => {
+        if (!ativo) return
+        if (resultado.ok) {
+          form.reset({
+            paleta: resultado.tema.paleta,
+            estilo: resultado.tema.estilo,
+            formatoCard: resultado.tema.formatoCard,
+            layout: resultado.tema.layout,
+            fonte: resultado.tema.fonte,
+            logoUrl: resultado.tema.logoUrl ?? '',
+          })
+          setLogoUrl(resultado.tema.logoUrl)
+        } else {
+          setError(resultado.error)
+        }
+      })
+      .finally(() => {
+        if (ativo) setIsLoading(false)
+      })
+    return () => {
+      ativo = false
+    }
+  }, [form])
 
   const paleta = useWatch({ control: form.control, name: 'paleta' })
   const formatoCard = useWatch({ control: form.control, name: 'formatoCard' })
@@ -204,9 +226,10 @@ export function TemaForm({ tema }: { tema: TemaView }) {
 
   const dadosPaleta = obterPaleta(paleta)
   const cssFonte = obterFonte(fonte).css
+  const previewLayout = obterLayout(layout)
 
   async function handleSubmit(values: TemaValues) {
-    setIsLoading(true)
+    setIsSaving(true)
     setError(null)
     try {
       const resultado = await alterarTemaAction({
@@ -221,17 +244,38 @@ export function TemaForm({ tema }: { tema: TemaView }) {
         setError(resultado.error)
         return
       }
+      setLogoUrl(values.logoUrl || null)
       toast.add({
         title: 'Aparência atualizada',
         description: 'Sua vitrine já reflete o novo visual.',
         type: 'success',
       })
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
-  const previewLayout = obterLayout(layout)
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="mt-2 h-4 w-64" />
+          </CardHeader>
+          <CardContent className="flex flex-col gap-8">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -430,9 +474,9 @@ export function TemaForm({ tema }: { tema: TemaView }) {
           </form>
         </CardContent>
         <CardFooter className="justify-end border-t">
-          <Button type="submit" form="tema-form" disabled={isLoading}>
-            {isLoading ? <Spinner data-icon="inline-start" /> : null}
-            {isLoading ? 'Salvando...' : 'Salvar aparência'}
+          <Button type="submit" form="tema-form" disabled={isSaving}>
+            {isSaving ? <Spinner data-icon="inline-start" /> : null}
+            {isSaving ? 'Salvando...' : 'Salvar aparência'}
           </Button>
         </CardFooter>
       </Card>
@@ -450,10 +494,10 @@ export function TemaForm({ tema }: { tema: TemaView }) {
           }}
         >
           <div className="flex items-center justify-between gap-2">
-            {tema.logoUrl ? (
+            {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={tema.logoUrl}
+                src={logoUrl}
                 alt="Logo"
                 className="size-7 rounded-full object-cover"
               />
