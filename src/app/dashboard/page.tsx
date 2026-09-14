@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Copy, ExternalLink, Package, Sparkles, Store, Tags, TrendingUp } from 'lucide-react'
+import { Copy, ExternalLink, Package, QrCode, Sparkles, Store, Tags, TrendingUp } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -163,6 +163,15 @@ export default async function DashboardPage() {
               <span className="font-mono">vitrine.app/{slug}</span>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                render={<Link href="/dashboard/qrcode" />}
+              >
+                <QrCode className="size-3.5" aria-hidden="true" />
+                QR Code
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
