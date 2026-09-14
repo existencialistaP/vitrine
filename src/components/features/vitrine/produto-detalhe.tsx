@@ -90,7 +90,11 @@ export function ProdutoDetalhe({
                   ? undefined
                   : 'bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90'
               }
-              aria-label={`Adicionar ${produto.nome} ao pedido`}
+              aria-label={
+                adicionado
+                  ? 'Adicionado ao pedido'
+                  : `Adicionar ${produto.nome} ao pedido`
+              }
               onClick={() => adicionar(produto)}
             >
               {adicionado ? (

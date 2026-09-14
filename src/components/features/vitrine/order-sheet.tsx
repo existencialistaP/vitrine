@@ -31,6 +31,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import type { VitrineBase } from '@/lib/vitrine-view'
 
+import { estiloTema } from './tema-vitrine'
+
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
@@ -87,7 +89,11 @@ export function OrderSheet({
 
   return (
     <Sheet open={aberto} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md"
+        style={estiloTema(vitrine.tema)}
+      >
         <SheetHeader>
           <SheetTitle>Seu pedido</SheetTitle>
           <SheetDescription>

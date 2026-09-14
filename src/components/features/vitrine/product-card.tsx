@@ -24,7 +24,7 @@ function TituloProduto({
       {href ? (
         <Link
           href={href}
-          className="outline-none after:absolute after:inset-0 after:content-['']"
+          className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-offset-[-3px] focus-visible:after:outline-(--vitrine-primary)"
         >
           {produto.nome}
         </Link>
@@ -56,7 +56,11 @@ function AcaoAdicionar({
           ? undefined
           : 'bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90'
       }
-      aria-label={`Adicionar ${produto.nome} ao pedido`}
+      aria-label={
+        adicionado
+          ? 'Adicionado ao pedido'
+          : `Adicionar ${produto.nome} ao pedido`
+      }
       onClick={() => onAdicionar(produto)}
     >
       {adicionado ? (
