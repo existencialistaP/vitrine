@@ -62,7 +62,8 @@ export async function updateSession(request: NextRequest) {
     pathname === rota || pathname.startsWith(rota + '/'),
   )
 
-  // Também são públicas: slug da vitrine (ex.: /minha-loja), /api/health, assets
+  // Também são públicas: slug da vitrine (ex.: /minha-loja), sua página de
+  // produto (/minha-loja/produto/<id>), /api/health e assets
   const isVitrineSlug =
     !isPublicRoute &&
     !pathname.startsWith('/dashboard') &&
@@ -70,7 +71,8 @@ export async function updateSession(request: NextRequest) {
     !pathname.startsWith('/settings') &&
     !pathname.startsWith('/_next') &&
     !pathname.startsWith('/api') &&
-    pathname.split('/').length <= 2
+    (pathname.split('/').length <= 2 ||
+      /^\/[^/]+\/produto\/[^/]+$/.test(pathname))
 
   if (!user && !isPublicRoute && !isVitrineSlug) {
     // no user, potentially respond by redirecting the user to the login page

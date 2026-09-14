@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { MessageCircle, Minus, Plus, ShoppingBag } from 'lucide-react'
 
 import { formatarPedidoAction } from '@/app/actions/pedido'
+import { type ItemCarrinho } from '@/components/features/vitrine/use-carrinho'
 import { Button } from '@/components/ui/button'
 import {
   Empty,
@@ -28,15 +29,9 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import type { VitrineView } from '@/lib/vitrine-view'
+import type { VitrineBase } from '@/lib/vitrine-view'
 
-type ItemCarrinho = {
-  id: string
-  nome: string
-  precoCents: number
-  precoFormatado: string
-  quantidade: number
-}
+import { estiloTema } from './tema-vitrine'
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -51,7 +46,7 @@ export function OrderSheet({
   onAlterarQuantidade,
   onLimpar,
 }: {
-  vitrine: VitrineView
+  vitrine: VitrineBase
   itens: ItemCarrinho[]
   aberto: boolean
   onOpenChange: (aberto: boolean) => void
@@ -94,7 +89,11 @@ export function OrderSheet({
 
   return (
     <Sheet open={aberto} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-md"
+        style={estiloTema(vitrine.tema)}
+      >
         <SheetHeader>
           <SheetTitle>Seu pedido</SheetTitle>
           <SheetDescription>
