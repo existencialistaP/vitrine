@@ -6,7 +6,12 @@ import { MessageCircle, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { resolveProductSection, type BlocoExperiencia } from '@/lib/experience'
+import { classeEstiloCard, classeLayout, obterFormatoCard } from '@/lib/visual'
+import { cn } from '@/lib/utils'
 import type { VitrineView } from '@/lib/vitrine-view'
+import { Layout } from '@/modules/loja/domain/vos/identidade-visual'
+
+import { ProductCard } from './product-card'
 
 function Envolver({
   bloco,
@@ -35,18 +40,20 @@ export function ExperienceRenderer({
   blocks,
   vitrine,
   onAdd,
+  adicionadoId,
   preview = false,
 }: {
   blocks: BlocoExperiencia[]
   vitrine: VitrineView
   onAdd?: (product: VitrineView['produtos'][number]) => void
+  adicionadoId?: string | null
   preview?: boolean
 }) {
   return (
     <div className="flex flex-col gap-12">
       {blocks.map((block) => (
         <Envolver key={block.id} bloco={block} preview={preview}>
-          {renderizar(block, vitrine, onAdd)}
+          {renderizar(block, vitrine, onAdd, adicionadoId)}
         </Envolver>
       ))}
     </div>
@@ -56,7 +63,8 @@ export function ExperienceRenderer({
 function renderizar(
   block: BlocoExperiencia,
   vitrine: VitrineView,
-  onAdd?: (product: VitrineView['produtos'][number]) => void
+  onAdd?: (product: VitrineView['produtos'][number]) => void,
+  adicionadoId?: string | null
 ) {
   const texto = (chave: string, fallback: string) => String(block.props[chave] ?? fallback)
 
@@ -129,31 +137,30 @@ function renderizar(
 
     case 'productCollection': {
       const produtos = resolveProductSection(vitrine.produtos, block.props)
+      const aspecto = obterFormatoCard(vitrine.tema.formatoCard).aspecto
+      const destaquePrimeiro = vitrine.tema.layout === Layout.DESTAQUE
       return (
         <section className="flex flex-col gap-4">
           <h2 className="font-heading text-2xl font-semibold">
             {texto('title', 'Produtos em destaque')}
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {produtos.map((product) => (
-              <Card key={product.id}>
-                <CardContent className="flex flex-col gap-3 p-4">
-                  <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                    {product.imagemUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={product.imagemUrl} alt={product.nome} className="size-full object-cover" />
-                    ) : null}
-                  </div>
-                  <p className="font-medium">{product.nome}</p>
-                  <p className="text-sm text-muted-foreground">{product.precoFormatado}</p>
-                  {onAdd && (
-                    <Button variant="outline" size="sm" onClick={() => onAdd(product)}>
-                      Adicionar
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+          <div className={cn('grid', classeLayout(vitrine.tema.layout))}>
+            {produtos.map((product, indice) => {
+              const emDestaque = destaquePrimeiro && indice === 0
+              return (
+                <ProductCard
+                  key={product.id}
+                  produto={product}
+                  onAdicionar={onAdd}
+                  adicionado={adicionadoId === product.id}
+                  aspecto={aspecto}
+                  classeCard={classeEstiloCard(vitrine.tema.estilo)}
+                  horizontal={vitrine.tema.layout === Layout.LISTA || emDestaque}
+                  destaque={emDestaque}
+                  className={emDestaque ? 'col-span-full' : undefined}
+                />
+              )
+            })}
           </div>
         </section>
       )

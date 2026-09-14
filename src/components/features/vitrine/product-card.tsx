@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Store } from 'lucide-react'
+import { Check, Plus, Store } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,20 +9,58 @@ import type { VitrineView } from '@/lib/vitrine-view'
 
 type Produto = VitrineView['produtos'][number]
 
+function AcaoAdicionar({
+  produto,
+  onAdicionar,
+  adicionado,
+  tamanho,
+}: {
+  produto: Produto
+  onAdicionar?: (produto: Produto) => void
+  adicionado: boolean
+  tamanho: 'default' | 'sm'
+}) {
+  if (!onAdicionar) return null
+  return (
+    <Button
+      variant={adicionado ? 'outline' : 'default'}
+      size={tamanho}
+      className={
+        adicionado
+          ? undefined
+          : 'bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90'
+      }
+      aria-label={`Adicionar ${produto.nome} ao pedido`}
+      onClick={() => onAdicionar(produto)}
+    >
+      {adicionado ? (
+        <Check data-icon="inline-start" />
+      ) : (
+        <Plus data-icon="inline-start" />
+      )}
+      {adicionado ? 'Adicionado ✓' : tamanho === 'default' ? 'Adicionar ao pedido' : 'Adicionar'}
+    </Button>
+  )
+}
+
 export function ProductCard({
   produto,
   onAdicionar,
+  adicionado = false,
   aspecto = 'aspect-square',
   classeCard = 'rounded-lg',
   horizontal = false,
   destaque = false,
+  className,
 }: {
   produto: Produto
-  onAdicionar: (produto: Produto) => void
+  onAdicionar?: (produto: Produto) => void
+  adicionado?: boolean
   aspecto?: string
   classeCard?: string
   horizontal?: boolean
   destaque?: boolean
+  className?: string
 }) {
   const imagem = produto.imagemUrl ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -40,31 +78,32 @@ export function ProductCard({
 
   if (horizontal) {
     return (
-      <Card className={cn('flex overflow-hidden', classeCard)}>
+      <Card className={cn('flex overflow-hidden', classeCard, className)}>
         <div className={cn('w-28 shrink-0 overflow-hidden bg-muted sm:w-40', aspecto)}>
           {imagem}
         </div>
         <CardContent className="flex flex-1 flex-col gap-1.5 p-4">
-          <h3 className={cn('font-heading font-semibold tracking-tight', destaque ? 'text-lg' : 'text-sm')}>
+          <h3
+            className={cn(
+              'font-heading font-semibold tracking-tight',
+              destaque ? 'text-lg' : 'text-sm'
+            )}
+          >
             {produto.nome}
           </h3>
           {produto.descricao && (
-            <p className="line-clamp-2 text-sm text-muted-foreground">
-              {produto.descricao}
-            </p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{produto.descricao}</p>
           )}
-          <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <div className="relative z-10 mt-auto flex items-center justify-between gap-2 pt-2">
             <span className="font-heading text-base font-semibold tabular-nums">
               {produto.precoFormatado}
             </span>
-            <Button
-              size={destaque ? 'default' : 'sm'}
-              className="bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90"
-              onClick={() => onAdicionar(produto)}
-            >
-              <Plus data-icon="inline-start" />
-              {destaque ? 'Adicionar ao pedido' : 'Adicionar'}
-            </Button>
+            <AcaoAdicionar
+              produto={produto}
+              onAdicionar={onAdicionar}
+              adicionado={adicionado}
+              tamanho={destaque ? 'default' : 'sm'}
+            />
           </div>
         </CardContent>
       </Card>
@@ -72,10 +111,8 @@ export function ProductCard({
   }
 
   return (
-    <Card className={cn('overflow-hidden', classeCard)}>
-      <div className={cn('w-full overflow-hidden bg-muted', aspecto)}>
-        {imagem}
-      </div>
+    <Card className={cn('overflow-hidden', classeCard, className)}>
+      <div className={cn('w-full overflow-hidden bg-muted', aspecto)}>{imagem}</div>
       <CardContent className="flex flex-1 flex-col gap-1.5 p-4">
         <h3 className="font-heading text-sm font-medium">{produto.nome}</h3>
         {produto.descricao && (
@@ -83,18 +120,16 @@ export function ProductCard({
             {produto.descricao}
           </p>
         )}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+        <div className="relative z-10 mt-auto flex items-center justify-between gap-2 pt-2">
           <span className="font-heading text-base font-semibold tabular-nums">
             {produto.precoFormatado}
           </span>
-          <Button
-            size="sm"
-            className="shrink-0 bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90"
-            onClick={() => onAdicionar(produto)}
-          >
-            <Plus data-icon="inline-start" />
-            Adicionar
-          </Button>
+          <AcaoAdicionar
+            produto={produto}
+            onAdicionar={onAdicionar}
+            adicionado={adicionado}
+            tamanho="sm"
+          />
         </div>
       </CardContent>
     </Card>
