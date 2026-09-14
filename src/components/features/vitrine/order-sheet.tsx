@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import type { VitrineView } from '@/lib/vitrine-view'
+import type { VitrineBase } from '@/lib/vitrine-view'
 
 const brl = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -44,7 +44,7 @@ export function OrderSheet({
   onAlterarQuantidade,
   onLimpar,
 }: {
-  vitrine: VitrineView
+  vitrine: VitrineBase
   itens: ItemCarrinho[]
   aberto: boolean
   onOpenChange: (aberto: boolean) => void

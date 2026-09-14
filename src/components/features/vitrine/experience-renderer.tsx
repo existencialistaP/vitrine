@@ -53,7 +53,7 @@ export function ExperienceRenderer({
     <div className="flex flex-col gap-12">
       {blocks.map((block) => (
         <Envolver key={block.id} bloco={block} preview={preview}>
-          {renderizar(block, vitrine, onAdd, adicionadoId)}
+          {renderizar(block, vitrine, onAdd, adicionadoId, preview)}
         </Envolver>
       ))}
     </div>
@@ -64,7 +64,8 @@ function renderizar(
   block: BlocoExperiencia,
   vitrine: VitrineView,
   onAdd?: (product: VitrineView['produtos'][number]) => void,
-  adicionadoId?: string | null
+  adicionadoId?: string | null,
+  preview?: boolean
 ) {
   const texto = (chave: string, fallback: string) => String(block.props[chave] ?? fallback)
 
@@ -158,6 +159,7 @@ function renderizar(
                   horizontal={vitrine.tema.layout === Layout.LISTA || emDestaque}
                   destaque={emDestaque}
                   className={emDestaque ? 'col-span-full' : undefined}
+                  href={preview ? undefined : `/${vitrine.slug}/produto/${product.id}`}
                 />
               )
             })}

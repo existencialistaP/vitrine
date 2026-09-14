@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Check, Plus, Store } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,31 @@ import { cn } from '@/lib/utils'
 import type { VitrineView } from '@/lib/vitrine-view'
 
 type Produto = VitrineView['produtos'][number]
+
+function TituloProduto({
+  produto,
+  href,
+  className,
+}: {
+  produto: Produto
+  href?: string
+  className?: string
+}) {
+  return (
+    <h3 className={className}>
+      {href ? (
+        <Link
+          href={href}
+          className="outline-none after:absolute after:inset-0 after:content-['']"
+        >
+          {produto.nome}
+        </Link>
+      ) : (
+        produto.nome
+      )}
+    </h3>
+  )
+}
 
 function AcaoAdicionar({
   produto,
@@ -46,6 +72,7 @@ function AcaoAdicionar({
 export function ProductCard({
   produto,
   onAdicionar,
+  href,
   adicionado = false,
   aspecto = 'aspect-square',
   classeCard = 'rounded-lg',
@@ -55,6 +82,7 @@ export function ProductCard({
 }: {
   produto: Produto
   onAdicionar?: (produto: Produto) => void
+  href?: string
   adicionado?: boolean
   aspecto?: string
   classeCard?: string
@@ -78,19 +106,19 @@ export function ProductCard({
 
   if (horizontal) {
     return (
-      <Card className={cn('flex overflow-hidden', classeCard, className)}>
+      <Card className={cn('relative flex overflow-hidden', classeCard, className)}>
         <div className={cn('w-28 shrink-0 overflow-hidden bg-muted sm:w-40', aspecto)}>
           {imagem}
         </div>
         <CardContent className="flex flex-1 flex-col gap-1.5 p-4">
-          <h3
+          <TituloProduto
+            produto={produto}
+            href={href}
             className={cn(
               'font-heading font-semibold tracking-tight',
               destaque ? 'text-lg' : 'text-sm'
             )}
-          >
-            {produto.nome}
-          </h3>
+          />
           {produto.descricao && (
             <p className="line-clamp-2 text-sm text-muted-foreground">{produto.descricao}</p>
           )}
@@ -111,10 +139,14 @@ export function ProductCard({
   }
 
   return (
-    <Card className={cn('overflow-hidden', classeCard, className)}>
+    <Card className={cn('relative overflow-hidden', classeCard, className)}>
       <div className={cn('w-full overflow-hidden bg-muted', aspecto)}>{imagem}</div>
       <CardContent className="flex flex-1 flex-col gap-1.5 p-4">
-        <h3 className="font-heading text-sm font-medium">{produto.nome}</h3>
+        <TituloProduto
+          produto={produto}
+          href={href}
+          className="font-heading text-sm font-medium"
+        />
         {produto.descricao && (
           <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {produto.descricao}
