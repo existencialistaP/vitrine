@@ -108,7 +108,8 @@ export function useCarrinho(
   useEffect(() => {
     if (!habilitado) return
     try {
-      setItens(parseCarrinho(window.localStorage.getItem(`vitrine:carrinho:${slug}`)))
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reidratação pós-mount: evita mismatch de hidratação (localStorage não existe no SSR)
+      setItens(parseCarrinho(window.localStorage.getItem(chaveCarrinho(slug))))
     } catch {
       // storage indisponível (quota/privado): segue em memória
     }
@@ -119,7 +120,7 @@ export function useCarrinho(
   useEffect(() => {
     if (!habilitado || !pronto) return
     try {
-      window.localStorage.setItem(`vitrine:carrinho:${slug}`, serializarCarrinho(itens))
+      window.localStorage.setItem(chaveCarrinho(slug), serializarCarrinho(itens))
     } catch {
       // sem persistência: estado em memória continua funcionando
     }
