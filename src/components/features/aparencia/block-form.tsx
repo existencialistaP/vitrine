@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
@@ -253,33 +254,41 @@ export function BlockForm({
   categorias,
 }: {
   bloco: BlocoExperiencia
-  onChange: (props: Record<string, unknown>) => void
-  onLabelChange: (label: string) => void
+  onChange: (valores: { label: string } & Record<string, unknown>) => void
+  /**
+   * @deprecated Compatibilidade temporária com o construtor legado.
+   * O label agora faz parte do payload de `onChange` e este prop será
+   * removido junto com `experience-builder.tsx` (Task 6).
+   */
+  onLabelChange?: (label: string) => void
   produtos: { id: string; nome: string }[]
   categorias: { id: string; nome: string }[]
 }) {
-  const schema = z.object({
-    label: z.string().min(1, 'Nome é obrigatório'),
-    ...((propSchemas[bloco.type] as z.ZodObject<z.ZodRawShape>).shape),
-  })
+  const schema = useMemo(
+    () =>
+      z.object({
+        label: z.string().min(1, 'Nome é obrigatório'),
+        ...((propSchemas[bloco.type] as z.ZodObject<z.ZodRawShape>).shape),
+      }),
+    [bloco.type]
+  )
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    mode: 'onChange',
+    mode: 'onBlur',
     defaultValues: { label: bloco.label, ...bloco.props },
   })
 
   function propagar() {
     const valores = form.getValues()
     const { label, ...props } = valores
-    onChange(props)
-    onLabelChange(String(label))
+    onChange({ label: String(label), ...props })
+    onLabelChange?.(String(label))
   }
 
   const campos = camposPara(bloco.type)
   const lista = edicaoDeLista(bloco.type)
   const errors = form.formState.errors as Record<string, { message?: string; type?: string }>
-  const valido = schema.safeParse(form.watch()).success
 
   return (
     <div className="flex flex-col gap-4">
@@ -452,10 +461,6 @@ export function BlockForm({
             propagar()
           }}
         />
-      )}
-
-      {!valido && (
-        <FieldError>Revise os campos: há valores inválidos.</FieldError>
       )}
     </div>
   )
