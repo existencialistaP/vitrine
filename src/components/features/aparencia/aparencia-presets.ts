@@ -1,10 +1,21 @@
-/** Seleção de tema por ids (strings dos enums do domínio). */
+import type {
+  Estilo,
+  FormatoCard,
+  Layout,
+  Paleta,
+} from '@/modules/loja/domain/vos/identidade-visual'
+import type { Fonte } from '@/modules/loja/domain/vos/fonte'
+
+/**
+ * Seleção de tema por ids do domínio. Os tipos de união impedem ids
+ * inexistentes em tempo de compilação.
+ */
 export type TemaSelecao = {
-  paleta: string
-  estilo: string
-  formatoCard: string
-  layout: string
-  fonte: string
+  paleta: Paleta
+  estilo: Estilo
+  formatoCard: FormatoCard
+  layout: Layout
+  fonte: Fonte
 }
 
 export type PresetAparencia = {
@@ -14,7 +25,7 @@ export type PresetAparencia = {
   tema: TemaSelecao
 }
 
-/** Combos prontos (RF-7), montados sobre os catálogos existentes de `lib/visual`. */
+/** Combos prontos (RF-7) usando ids do domínio; a validade é garantida pelos tipos e pelo teste de pertencimento aos catálogos de `lib/visual`. */
 export const PRESETS_APARENCIA: readonly PresetAparencia[] = [
   {
     id: 'oceano-classico',

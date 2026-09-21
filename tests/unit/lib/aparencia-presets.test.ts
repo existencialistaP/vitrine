@@ -4,17 +4,19 @@ import {
   PRESETS_APARENCIA,
   encontrarPreset,
   presetParaTema,
+  type TemaSelecao,
 } from "@/components/features/aparencia/aparencia-presets";
+import { ESTILOS, FONTES, FORMATOS_CARD, LAYOUTS, PALETAS } from "@/lib/visual";
 
 describe("presets de aparência", () => {
-  it("todo preset produz um tema completo e válido", () => {
+  it("todo preset produz um tema com ids presentes nos catálogos", () => {
     for (const preset of PRESETS_APARENCIA) {
       const tema = presetParaTema(preset);
-      expect(tema.paleta).toBeTruthy();
-      expect(tema.estilo).toBeTruthy();
-      expect(tema.formatoCard).toBeTruthy();
-      expect(tema.layout).toBeTruthy();
-      expect(tema.fonte).toBeTruthy();
+      expect(PALETAS.some((p) => p.id === tema.paleta)).toBe(true);
+      expect(ESTILOS.some((e) => e.id === tema.estilo)).toBe(true);
+      expect(FORMATOS_CARD.some((f) => f.id === tema.formatoCard)).toBe(true);
+      expect(LAYOUTS.some((l) => l.id === tema.layout)).toBe(true);
+      expect(FONTES.some((f) => f.id === tema.fonte)).toBe(true);
     }
   });
 
@@ -24,7 +26,7 @@ describe("presets de aparência", () => {
   });
 
   it("retorna null para tema personalizado", () => {
-    const tema = { ...presetParaTema(PRESETS_APARENCIA[0]), paleta: "CARVAO" };
+    const tema: TemaSelecao = { ...presetParaTema(PRESETS_APARENCIA[0]), paleta: "CARVAO" };
     expect(encontrarPreset(tema)).toBeNull();
   });
 });
