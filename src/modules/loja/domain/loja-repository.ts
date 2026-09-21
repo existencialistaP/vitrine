@@ -12,6 +12,12 @@ export interface LojaRepository {
   /** Persiste a vitrine e seus filhos atomicamente, retornando a versão atualizada. */
   save(loja: Loja): Promise<Loja>;
 
+  /** Atualiza apenas a experiência (JSON) com lock otimista na coluna versao. */
+  atualizarExperiencia(loja: Loja): Promise<void>;
+
+  /** Atualiza apenas as colunas de tema com lock otimista na coluna versao. */
+  atualizarTema(loja: Loja): Promise<void>;
+
   findById(id: LojaId): Promise<Loja | null>;
 
   findBySlug(slug: Slug): Promise<Loja | null>;

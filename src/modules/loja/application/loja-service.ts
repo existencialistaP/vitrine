@@ -181,8 +181,12 @@ export class LojaService {
       logoUrl: cmd.logoUrl !== null ? Url.of(cmd.logoUrl!) : null,
     });
 
+    const antes = loja.getTema();
     loja.alterarTema(tema);
-    await this.persistir(loja);
+    if (!loja.getTema().equals(antes)) {
+      await this.repository.atualizarTema(loja);
+    }
+    await this.eventBus.publish(loja.pullDomainEvents());
   }
 
   private async alterarDadosLoja(cmd: AlterarDadosLoja): Promise<void> {
@@ -237,8 +241,14 @@ export class LojaService {
 
   private async salvarExperiencia(cmd: SalvarExperiencia): Promise<void> {
     const loja = await this.buscarPorId(LojaId.fromString(cmd.lojaId));
-    loja.alterarExperiencia(Experiencia.dePaginas(cmd.paginas));
-    await this.persistir(loja);
+    const experiencia = Experiencia.dePaginas(cmd.paginas);
+
+    const antes = loja.getExperiencia();
+    loja.alterarExperiencia(experiencia);
+    if (!loja.getExperiencia().equals(antes)) {
+      await this.repository.atualizarExperiencia(loja);
+    }
+    await this.eventBus.publish(loja.pullDomainEvents());
   }
 
   async buscarPorSlug(slug: string): Promise<Loja> {
