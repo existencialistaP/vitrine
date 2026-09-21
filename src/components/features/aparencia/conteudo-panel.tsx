@@ -1,22 +1,30 @@
 'use client'
 
+import { useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
-  ChevronLeft,
   Copy,
   Eye,
   EyeOff,
   Layers3,
   Lock,
   Plus,
+  Settings2,
   Trash2,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
 import { Separator } from '@/components/ui/separator'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import {
   blockCatalog,
   blockTypeLabel,
@@ -28,7 +36,9 @@ import type { VitrineBase } from '@/lib/vitrine-view'
 import { cn } from '@/lib/utils'
 
 import { BlockForm } from './block-form'
-import { useMediaQuery } from './use-media-query'
+
+const BLOCOS_ESSENCIAIS = blockCatalog.filter((item) => item.plan === 'ESSENCIAL')
+const BLOCOS_AVANCADOS = blockCatalog.filter((item) => item.plan === 'LIVRE')
 
 export function ConteudoPanel({
   paginas,
@@ -55,111 +65,164 @@ export function ConteudoPanel({
   onDuplicarBloco: (id: string) => void
   onAlternarVisivel: (id: string) => void
   onRemoverBloco: (id: string) => void
-  onAdicionarBloco: (tipo: BlockType) => void
+  onAdicionarBloco: (tipo: BlockType) => string | null
   base: VitrineBase
   isSaving: boolean
   maxBlocks: number
   advanced: boolean
 }) {
+  const [adicionando, setAdicionando] = useState(false)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
   const paginaAtiva = paginas.find((p) => p.id === paginaId) ?? paginas[0]
-  const selected = paginaAtiva?.blocos.find((b) => b.id === selectedId) ?? null
-  const ehDesktop = useMediaQuery('(min-width: 64rem)')
-  const ehTablet = useMediaQuery('(min-width: 48rem)')
+  const blocoEditando = editandoId
+    ? (paginaAtiva?.blocos.find((b) => b.id === editandoId) ?? null)
+    : null
+  const cheio = !paginaAtiva || paginaAtiva.blocos.length >= maxBlocks
 
-  const formulario = selected ? (
-    <BlockForm
-      key={selected.id}
-      bloco={selected}
-      produtos={base.produtos}
-      categorias={base.categorias}
-      onChange={(valores) => onAtualizarBloco(selected.id, valores)}
-    />
-  ) : null
+  function adicionar(tipo: BlockType) {
+    const novoId = onAdicionarBloco(tipo)
+    if (!novoId) return
+    setAdicionando(false)
+    setEditandoId(novoId)
+  }
+
+  function configurar(id: string) {
+    onSelecionarBloco(id)
+    setEditandoId(id)
+  }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-        <div className="flex items-center justify-between rounded-lg border bg-background p-3 text-sm">
-          <span className="flex items-center gap-2 font-medium">
-            <Layers3 className="size-4 text-primary" aria-hidden="true" />
-            Estrutura da página
-          </span>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background p-3 text-sm">
+        <span className="flex items-center gap-2 font-medium">
+          <Layers3 className="size-4 text-primary" aria-hidden="true" />
+          Estrutura da página
+        </span>
+        <span className="flex items-center gap-3">
           <span className="text-muted-foreground">
             {paginaAtiva?.blocos.length ?? 0}/{maxBlocks} blocos
           </span>
-        </div>
-
-        {!paginaAtiva || paginaAtiva.blocos.length === 0 ? (
-          <Empty>
-            <EmptyTitle>Página vazia</EmptyTitle>
-            <EmptyDescription>
-              Adicione o primeiro bloco para começar a montar esta página.
-            </EmptyDescription>
-          </Empty>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {paginaAtiva.blocos.map((bloco, indice) => (
-              <li key={bloco.id}>
-                <ItemBloco
-                  bloco={bloco}
-                  indice={indice}
-                  total={paginaAtiva.blocos.length}
-                  selecionado={selectedId === bloco.id}
-                  onSelecionar={() => onSelecionarBloco(bloco.id)}
-                  onMover={(d) => onMoverBloco(bloco.id, d)}
-                  onDuplicar={() => onDuplicarBloco(bloco.id)}
-                  onAlternarVisivel={() => onAlternarVisivel(bloco.id)}
-                  onRemover={() => onRemoverBloco(bloco.id)}
-                />
-                {!ehTablet && selectedId === bloco.id && (
-                  <div
-                    role="region"
-                    aria-label="Propriedades do bloco"
-                    className="mt-2 rounded-lg border bg-muted/30 p-3"
-                  >
-                    {formulario}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {ehDesktop && !selected && paginaAtiva && paginaAtiva.blocos.length > 0 && (
-          <p className="text-sm text-muted-foreground">
-            Selecione um bloco para editar as propriedades.
-          </p>
-        )}
-
-        <Separator />
-
-        <CatalogoBlocos advanced={advanced} isSaving={isSaving} onAdicionar={onAdicionarBloco} />
+          <Button size="sm" disabled={cheio} onClick={() => setAdicionando(true)}>
+            <Plus data-icon="inline-start" />
+            Adicionar bloco
+          </Button>
+        </span>
       </div>
 
-      {ehDesktop && selected && (
-        <div className="hidden min-h-0 w-80 shrink-0 flex-col overflow-y-auto border-l p-4 lg:flex">
-          <h3 className="mb-3 font-heading text-sm font-semibold">Propriedades</h3>
-          {formulario}
-        </div>
+      {!paginaAtiva || paginaAtiva.blocos.length === 0 ? (
+        <Empty>
+          <EmptyTitle>Página vazia</EmptyTitle>
+          <EmptyDescription>
+            Adicione o primeiro bloco para começar a montar esta página.
+          </EmptyDescription>
+        </Empty>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {paginaAtiva.blocos.map((bloco, indice) => (
+            <li key={bloco.id}>
+              <ItemBloco
+                bloco={bloco}
+                indice={indice}
+                total={paginaAtiva.blocos.length}
+                selecionado={selectedId === bloco.id}
+                onSelecionar={() => onSelecionarBloco(bloco.id)}
+                onMover={(d) => onMoverBloco(bloco.id, d)}
+                onDuplicar={() => onDuplicarBloco(bloco.id)}
+                onConfigurar={() => configurar(bloco.id)}
+                onAlternarVisivel={() => onAlternarVisivel(bloco.id)}
+                onRemover={() => onRemoverBloco(bloco.id)}
+              />
+            </li>
+          ))}
+        </ul>
       )}
 
-      {ehTablet && !ehDesktop && (
-        <Sheet open={!!selected} onOpenChange={(aberto) => !aberto && onSelecionarBloco(null)}>
-          <SheetContent side="right" className="w-full overflow-y-auto p-4 sm:max-w-md">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="self-start"
-              onClick={() => onSelecionarBloco(null)}
-            >
-              <ChevronLeft data-icon="inline-start" />
-              Voltar para a lista
-            </Button>
-            <SheetTitle>Propriedades do bloco</SheetTitle>
-            {formulario}
-          </SheetContent>
-        </Sheet>
-      )}
+      <Dialog open={adicionando} onOpenChange={setAdicionando}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar bloco</DialogTitle>
+            <DialogDescription>
+              Comece por um bloco essencial ou expanda sua narrativa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex max-h-[50vh] flex-col gap-4 overflow-y-auto">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Essenciais
+              </p>
+              {BLOCOS_ESSENCIAIS.map((item) => (
+                <Button
+                  key={item.type}
+                  variant="outline"
+                  className="justify-start"
+                  disabled={isSaving}
+                  onClick={() => adicionar(item.type)}
+                >
+                  <Plus data-icon="inline-start" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+
+            <Separator />
+
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Avançados
+                </p>
+                {!advanced && <Lock className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+              </div>
+              {BLOCOS_AVANCADOS.map((item) => (
+                <Button
+                  key={item.type}
+                  variant="outline"
+                  className="justify-start"
+                  disabled={!advanced || isSaving}
+                  onClick={() => adicionar(item.type)}
+                >
+                  {advanced ? (
+                    <Plus data-icon="inline-start" />
+                  ) : (
+                    <Lock data-icon="inline-start" />
+                  )}
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={blocoEditando !== null}
+        onOpenChange={(aberto) => !aberto && setEditandoId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Propriedades do bloco</DialogTitle>
+            <DialogDescription>
+              {blocoEditando
+                ? `Editando ${blocoEditando.label}`
+                : 'Selecione um bloco para editar.'}
+            </DialogDescription>
+          </DialogHeader>
+          {blocoEditando && (
+            <div className="max-h-[60vh] overflow-y-auto pr-1">
+              <BlockForm
+                key={blocoEditando.id}
+                bloco={blocoEditando}
+                produtos={base.produtos}
+                categorias={base.categorias}
+                onChange={(valores) => onAtualizarBloco(blocoEditando.id, valores)}
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setEditandoId(null)}>Concluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -172,6 +235,7 @@ function ItemBloco({
   onSelecionar,
   onMover,
   onDuplicar,
+  onConfigurar,
   onAlternarVisivel,
   onRemover,
 }: {
@@ -182,6 +246,7 @@ function ItemBloco({
   onSelecionar: () => void
   onMover: (direcao: -1 | 1) => void
   onDuplicar: () => void
+  onConfigurar: () => void
   onAlternarVisivel: () => void
   onRemover: () => void
 }) {
@@ -192,11 +257,11 @@ function ItemBloco({
         selecionado ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'bg-background'
       )}
     >
-      <Button
-        variant="ghost"
-        className="min-w-0 flex-1 justify-start gap-3"
+      <button
+        type="button"
         aria-pressed={selecionado}
         onClick={onSelecionar}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <span
           className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold"
@@ -204,13 +269,13 @@ function ItemBloco({
         >
           {bloco.type.slice(0, 1).toUpperCase()}
         </span>
-        <span className="flex min-w-0 flex-col items-start">
+        <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-medium">{bloco.label}</span>
           <span className="truncate text-xs text-muted-foreground">
             {blockTypeLabel(bloco.type)} · {bloco.visible ? 'Visível' : 'Oculto'}
           </span>
         </span>
-      </Button>
+      </button>
 
       <div className="flex shrink-0 items-center gap-0.5">
         <Button
@@ -237,6 +302,14 @@ function ItemBloco({
         <Button
           variant="ghost"
           size="icon-sm"
+          aria-label="Configurar bloco"
+          onClick={onConfigurar}
+        >
+          <Settings2 aria-hidden="true" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           aria-label={bloco.visible ? 'Ocultar bloco' : 'Mostrar bloco'}
           onClick={onAlternarVisivel}
         >
@@ -245,64 +318,6 @@ function ItemBloco({
         <Button variant="ghost" size="icon-sm" aria-label="Excluir bloco" onClick={onRemover}>
           <Trash2 aria-hidden="true" />
         </Button>
-      </div>
-    </div>
-  )
-}
-
-function CatalogoBlocos({
-  advanced,
-  isSaving,
-  onAdicionar,
-}: {
-  advanced: boolean
-  isSaving: boolean
-  onAdicionar: (tipo: BlockType) => void
-}) {
-  const essenciais = blockCatalog.filter((item) => item.plan === 'ESSENCIAL')
-  const avancados = blockCatalog.filter((item) => item.plan === 'LIVRE')
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Essenciais
-        </p>
-        {essenciais.map((item) => (
-          <Button
-            key={item.type}
-            variant="outline"
-            className="justify-start"
-            disabled={isSaving}
-            onClick={() => onAdicionar(item.type)}
-          >
-            <Plus data-icon="inline-start" />
-            {item.label}
-          </Button>
-        ))}
-      </div>
-
-      <Separator />
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Avançados
-          </p>
-          {!advanced && <Lock className="size-3.5 text-muted-foreground" aria-hidden="true" />}
-        </div>
-        {avancados.map((item) => (
-          <Button
-            key={item.type}
-            variant="outline"
-            className="justify-start"
-            disabled={!advanced || isSaving}
-            onClick={() => onAdicionar(item.type)}
-          >
-            {advanced ? <Plus data-icon="inline-start" /> : <Lock data-icon="inline-start" />}
-            {item.label}
-          </Button>
-        ))}
       </div>
     </div>
   )

@@ -207,15 +207,17 @@ export function VitrineEditor({
     atualizarPagina((p) => ({ ...p, blocos: p.blocos.filter((b) => b.id !== id) }))
   }
 
-  function onAdicionarBloco(tipo: BlockType) {
-    let novoId = ''
-    atualizarPagina((p) => {
-      if (p.blocos.length >= CAPACIDADES.maxBlocks) return p
-      const bloco = createBlock(tipo)
-      novoId = bloco.id
-      return { ...p, blocos: [...p.blocos, bloco] }
-    })
-    if (novoId) setSelectedId(novoId)
+  function onAdicionarBloco(tipo: BlockType): string | null {
+    const pagina = paginas.find((p) => p.id === paginaId)
+    if (!pagina || pagina.blocos.length >= CAPACIDADES.maxBlocks) return null
+    const bloco = createBlock(tipo)
+    revisao.current += 1
+    setPaginas((atuais) =>
+      atuais.map((p) => (p.id === paginaId ? { ...p, blocos: [...p.blocos, bloco] } : p))
+    )
+    setSujeira((s) => marcarSujo(s, 'conteudo'))
+    setSelectedId(bloco.id)
+    return bloco.id
   }
 
   function adicionarPagina(template: ReturnType<typeof templates>[number]) {
