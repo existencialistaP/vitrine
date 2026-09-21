@@ -1,11 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react'
 
 import { salvarExperienciaAction } from '@/app/actions/experiencia'
 import { alterarTemaAction } from '@/app/actions/loja'
 import type { TemaView } from '@/app/actions/tema'
+import { PageHeaderTitle } from '@/components/layout/page-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -80,6 +87,8 @@ export function VitrineEditor({
     paginas: PaginaExperiencia[]
     tema: TemaView
   }>({ paginas: paginasIniciais, tema: temaInicial })
+  // Revisão do rascunho: distingue edições feitas durante o envio (RF-9).
+  const revisao = useRef(0)
 
   const vitrinePreview: VitrineView = useMemo(() => {
     const paleta = obterPaleta(tema.paleta)
@@ -111,6 +120,36 @@ export function VitrineEditor({
     return () => window.removeEventListener('beforeunload', avisar)
   }, [sujeira])
 
+  // Navegação client-side não dispara `beforeunload`: intercepta cliques em links
+  // internos para confirmar o descarte do rascunho (RF-9).
+  useEffect(() => {
+    if (!temAlteracoes(sujeira)) return
+    const aoClicar = (evento: MouseEvent) => {
+      if (evento.defaultPrevented) return
+      if (evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) return
+      const alvo = evento.target
+      if (!(alvo instanceof Element)) return
+      const link = alvo.closest('a')
+      if (!(link instanceof HTMLAnchorElement)) return
+      if (link.target && link.target !== '_self') return
+      if (link.hasAttribute('download')) return
+      const url = new URL(link.href, window.location.href)
+      if (url.origin !== window.location.origin) return
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return
+      const confirmar = window.confirm(
+        'Há alterações não salvas neste modo. Descartar e trocar?'
+      )
+      if (!confirmar) {
+        evento.preventDefault()
+        evento.stopPropagation()
+        return
+      }
+      setSujeira(sujeiraInicial())
+    }
+    document.addEventListener('click', aoClicar, true)
+    return () => document.removeEventListener('click', aoClicar, true)
+  }, [sujeira])
+
   function trocarModo(proximo: 'conteudo' | 'aparencia') {
     if (proximo === modo) return
     if (sujeira[modo]) {
@@ -136,6 +175,7 @@ export function VitrineEditor({
   }
 
   function atualizarPagina(atualiza: (pagina: PaginaExperiencia) => PaginaExperiencia) {
+    revisao.current += 1
     setPaginas((atuais) => atuais.map((p) => (p.id === paginaId ? atualiza(p) : p)))
     setSujeira((s) => marcarSujo(s, 'conteudo'))
   }
@@ -180,6 +220,7 @@ export function VitrineEditor({
 
   function adicionarPagina(template: ReturnType<typeof templates>[number]) {
     if (paginas.length >= CAPACIDADES.maxPages) return
+    revisao.current += 1
     const origem = template.paginas[0]
     const pagina: PaginaExperiencia = {
       ...origem,
@@ -194,11 +235,13 @@ export function VitrineEditor({
   }
 
   function renomearPagina(id: string, rotulo: string) {
+    revisao.current += 1
     setPaginas((atuais) => atuais.map((p) => (p.id === id ? { ...p, rotulo } : p)))
     setSujeira((s) => marcarSujo(s, 'conteudo'))
   }
 
   function removerPagina(id: string) {
+    revisao.current += 1
     setPaginas((atuais) => {
       if (atuais.length <= 1) return atuais
       const restantes = atuais.filter((p) => p.id !== id)
@@ -212,14 +255,18 @@ export function VitrineEditor({
   async function salvarConteudo() {
     setIsSaving(true)
     setErro(null)
+    const revisaoEnviada = revisao.current
+    const paginasEnviadas = paginas
     try {
-      const resultado = await salvarExperienciaAction(paginas)
+      const resultado = await salvarExperienciaAction(paginasEnviadas)
       if (!resultado.ok) {
         setErro(resultado.error)
         return
       }
-      setUltimoSalvo((atual) => ({ ...atual, paginas }))
-      setSujeira((s) => limparSujo(s, 'conteudo'))
+      setUltimoSalvo((atual) => ({ ...atual, paginas: paginasEnviadas }))
+      setSujeira((s) =>
+        revisao.current === revisaoEnviada ? limparSujo(s, 'conteudo') : s
+      )
       toast.add({ title: 'Vitrine publicada', description: 'Suas páginas foram atualizadas.', type: 'success' })
     } finally {
       setIsSaving(false)
@@ -229,14 +276,18 @@ export function VitrineEditor({
   async function salvarAparencia() {
     setIsSaving(true)
     setErro(null)
+    const revisaoEnviada = revisao.current
+    const temaEnviado = tema
     try {
-      const resultado = await alterarTemaAction(tema)
+      const resultado = await alterarTemaAction(temaEnviado)
       if (!resultado.ok) {
         setErro(resultado.error)
         return
       }
-      setUltimoSalvo((atual) => ({ ...atual, tema }))
-      setSujeira((s) => limparSujo(s, 'aparencia'))
+      setUltimoSalvo((atual) => ({ ...atual, tema: temaEnviado }))
+      setSujeira((s) =>
+        revisao.current === revisaoEnviada ? limparSujo(s, 'aparencia') : s
+      )
       toast.add({ title: 'Aparência salva', description: 'Sua vitrine já reflete o novo visual.', type: 'success' })
     } finally {
       setIsSaving(false)
@@ -313,6 +364,7 @@ export function VitrineEditor({
             <AparenciaPanel
               tema={tema}
               onChange={(patch) => {
+                revisao.current += 1
                 setTema((atual) => ({ ...atual, ...patch }))
                 setSujeira((s) => marcarSujo(s, 'aparencia'))
               }}
@@ -336,6 +388,8 @@ export function VitrineEditor({
           onAtualizar={atualizar}
           abertoMobile={previewMobileAberto}
           onAbertoMobileChange={setPreviewMobileAberto}
+          paginaId={paginaId}
+          onTrocarPagina={setPaginaId}
         />
       </div>
     </div>
@@ -373,7 +427,8 @@ function BarraEditor({
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        <PageHeaderTitle className="shrink-0">Editor da vitrine</PageHeaderTitle>
         <Tabs value={paginaId} onValueChange={onTrocarPagina} className="min-w-0 flex-1">
           <TabsList variant="line" className="h-9 w-full justify-start">
             {paginas.map((pagina) => (

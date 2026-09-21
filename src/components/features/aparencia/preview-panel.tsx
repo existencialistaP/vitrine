@@ -76,7 +76,17 @@ function BarraPreview({
   )
 }
 
-function Moldura({ vitrine, largura }: { vitrine: VitrineView; largura: number | null }) {
+function Moldura({
+  vitrine,
+  largura,
+  paginaId,
+  onTrocarPagina,
+}: {
+  vitrine: VitrineView
+  largura: number | null
+  paginaId: string
+  onTrocarPagina: (id: string) => void
+}) {
   // Deferir o objeto inteiro só tem efeito com o Storefront memoizado (Task 3):
   // no render urgente (tecla) a criança memoizada ignora a referência antiga.
   const vitrineDeferida = useDeferredValue(vitrine)
@@ -86,7 +96,12 @@ function Moldura({ vitrine, largura }: { vitrine: VitrineView; largura: number |
         className="overflow-hidden rounded-xl ring-1 ring-border"
         style={{ width: largura ?? '100%', maxWidth: '100%' }}
       >
-        <Storefront vitrine={vitrineDeferida} preview />
+        <Storefront
+          vitrine={vitrineDeferida}
+          preview
+          paginaId={paginaId}
+          onTrocarPagina={onTrocarPagina}
+        />
       </div>
     </div>
   )
@@ -98,12 +113,16 @@ export function PreviewPanel({
   onAtualizar,
   abertoMobile,
   onAbertoMobileChange,
+  paginaId,
+  onTrocarPagina,
 }: {
   vitrine: VitrineView
   prefs: PreferenciasEditor
   onAtualizar: (patch: Partial<PreferenciasEditor>) => void
   abertoMobile: boolean
   onAbertoMobileChange: (aberto: boolean) => void
+  paginaId: string
+  onTrocarPagina: (id: string) => void
 }) {
   const ehDesktop = useMediaQuery('(min-width: 64rem)')
 
@@ -129,7 +148,12 @@ export function PreviewPanel({
         onOcultar={aoOcultar}
         rotuloOcultar={prefs.telaCheia || !ehDesktop ? 'Fechar prévia' : 'Ocultar prévia'}
       />
-      <Moldura vitrine={vitrine} largura={prefs.largura} />
+      <Moldura
+        vitrine={vitrine}
+        largura={prefs.largura}
+        paginaId={paginaId}
+        onTrocarPagina={onTrocarPagina}
+      />
     </div>
   )
 
