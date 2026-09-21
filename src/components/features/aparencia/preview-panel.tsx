@@ -1,6 +1,13 @@
 'use client'
 
-import { useDeferredValue, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useDeferredValue,
+  useEffect,
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from 'react'
 import { EyeOff, Maximize2, Minimize2, Monitor, Smartphone, Tablet } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -18,6 +25,7 @@ const ICONES: Record<DispositivoId, typeof Smartphone> = {
 }
 
 const LARGURA_INICIAL = 640
+const PASSO_TECLADO = 16
 
 function BarraPreview({
   prefs,
@@ -55,11 +63,7 @@ function BarraPreview({
         aria-label={prefs.telaCheia ? 'Sair da tela cheia' : 'Abrir prévia em tela cheia'}
         aria-pressed={prefs.telaCheia}
         onClick={() =>
-          onAtualizar(
-            prefs.telaCheia
-              ? { telaCheia: false }
-              : { telaCheia: true, largura: null }
-          )
+          onAtualizar(prefs.telaCheia ? { telaCheia: false } : { telaCheia: true })
         }
       >
         {prefs.telaCheia ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
@@ -76,13 +80,17 @@ function Moldura({
   prefs,
   paginaId,
   onTrocarPagina,
+  frameRef,
   onRedimensionar,
+  onRedimensionarTeclado,
 }: {
   vitrine: VitrineView
   prefs: PreferenciasEditor
   paginaId: string
   onTrocarPagina: (id: string) => void
+  frameRef: RefObject<HTMLDivElement | null>
   onRedimensionar: (evento: ReactPointerEvent<HTMLDivElement>) => void
+  onRedimensionarTeclado: (evento: ReactKeyboardEvent<HTMLDivElement>) => void
 }) {
   // Deferir o objeto inteiro só tem efeito com o Storefront memoizado:
   // no render urgente (tecla) a criança memoizada ignora a referência antiga.
@@ -90,6 +98,7 @@ function Moldura({
   return (
     <div className="flex min-h-0 flex-1 justify-center overflow-hidden bg-muted/40 p-4">
       <div
+        ref={frameRef}
         className="relative h-full max-h-full"
         style={{
           width: prefs.telaCheia ? '100%' : prefs.largura ?? '100%',
@@ -107,10 +116,12 @@ function Moldura({
         {!prefs.telaCheia && (
           <div
             role="separator"
+            tabIndex={0}
             aria-orientation="vertical"
             aria-label="Redimensionar prévia"
             onPointerDown={onRedimensionar}
-            className="absolute -right-1 top-0 h-full w-2 cursor-col-resize touch-none"
+            onKeyDown={onRedimensionarTeclado}
+            className="absolute -right-1 top-0 h-full w-2 cursor-col-resize touch-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           />
         )}
       </div>
@@ -131,19 +142,47 @@ export function PreviewPanel({
   paginaId: string
   onTrocarPagina: (id: string) => void
 }) {
+  const frameRef = useRef<HTMLDivElement | null>(null)
+  const limparArrasteRef = useRef<(() => void) | null>(null)
+
+  // Remove listeners pendentes ao desmontar (ex.: fechar a prévia durante o arraste).
+  useEffect(() => {
+    return () => {
+      limparArrasteRef.current?.()
+    }
+  }, [])
+
+  function larguraRenderizada() {
+    return (
+      frameRef.current?.getBoundingClientRect().width ?? prefs.largura ?? LARGURA_INICIAL
+    )
+  }
+
   function redimensionar(evento: ReactPointerEvent<HTMLDivElement>) {
     evento.preventDefault()
+    limparArrasteRef.current?.()
     const inicio = evento.clientX
-    const larguraInicial = prefs.largura ?? LARGURA_INICIAL
+    const larguraInicial = larguraRenderizada()
     const aoMover = (movimento: PointerEvent) => {
       onAtualizar({ largura: resolverLargura(larguraInicial + (movimento.clientX - inicio)) })
     }
-    const aoSoltar = () => {
+    const limpar = () => {
       window.removeEventListener('pointermove', aoMover)
-      window.removeEventListener('pointerup', aoSoltar)
+      window.removeEventListener('pointerup', limpar)
+      window.removeEventListener('pointercancel', limpar)
+      limparArrasteRef.current = null
     }
+    limparArrasteRef.current = limpar
     window.addEventListener('pointermove', aoMover)
-    window.addEventListener('pointerup', aoSoltar)
+    window.addEventListener('pointerup', limpar)
+    window.addEventListener('pointercancel', limpar)
+  }
+
+  function redimensionarTeclado(evento: ReactKeyboardEvent<HTMLDivElement>) {
+    if (evento.key !== 'ArrowLeft' && evento.key !== 'ArrowRight') return
+    evento.preventDefault()
+    const passo = evento.key === 'ArrowRight' ? PASSO_TECLADO : -PASSO_TECLADO
+    onAtualizar({ largura: resolverLargura(larguraRenderizada() + passo) })
   }
 
   function fechar() {
@@ -164,6 +203,7 @@ export function PreviewPanel({
 
       <Dialog
         open={!prefs.oculta}
+        modal={false}
         onOpenChange={(aberto) => {
           if (!aberto) fechar()
           else onAtualizar({ oculta: false })
@@ -171,10 +211,11 @@ export function PreviewPanel({
       >
         <DialogContent
           showCloseButton={false}
+          showOverlay={false}
           className={
             prefs.telaCheia
-              ? 'fixed top-4 left-1/2 flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none -translate-x-1/2 flex-col gap-0 p-0 sm:max-w-none'
-              : 'fixed top-20 left-1/2 flex w-[min(1100px,95vw)] max-w-none -translate-x-1/2 flex-col gap-0 p-0 sm:max-w-none'
+              ? 'fixed top-4 left-1/2 flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none -translate-x-1/2 -translate-y-0 flex-col gap-0 p-0 sm:max-w-none'
+              : 'fixed top-20 left-1/2 flex w-[min(1100px,95vw)] max-w-none -translate-x-1/2 -translate-y-0 flex-col gap-0 p-0 sm:max-w-none'
           }
           style={
             prefs.telaCheia
@@ -189,7 +230,9 @@ export function PreviewPanel({
             prefs={prefs}
             paginaId={paginaId}
             onTrocarPagina={onTrocarPagina}
+            frameRef={frameRef}
             onRedimensionar={redimensionar}
+            onRedimensionarTeclado={redimensionarTeclado}
           />
         </DialogContent>
       </Dialog>

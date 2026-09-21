@@ -6,7 +6,6 @@ import {
   DISPOSITIVO_PADRAO,
   resolverDispositivo,
   resolverLargura,
-  resolverOculta,
   type DispositivoId,
 } from './preview-dispositivos'
 
@@ -43,7 +42,9 @@ export function useEditorPreferencias() {
           modoAvancado: dado.modoAvancado === true,
           dispositivo: resolverDispositivo(dado.dispositivo),
           largura: resolverLargura(dado.largura),
-          oculta: resolverOculta(dado.oculta),
+          // Sempre reidrata fechada: storage antigo podia ter `oculta: false`
+          // (padrão antigo), o que reabriria a prévia como overlay.
+          oculta: true,
           telaCheia: false,
         })
       }

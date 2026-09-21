@@ -74,8 +74,16 @@ export function VitrineEditor({
   const [sujeira, setSujeira] = useState(sujeiraInicial)
   const [isSaving, setIsSaving] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  // Revisão do rascunho: distingue edições feitas durante o envio (RF-9).
-  const revisao = useRef(0)
+  // Revisão do rascunho por domínio: distingue edições feitas durante o envio (RF-9).
+  const revisaoConteudo = useRef(0)
+  const revisaoAparencia = useRef(0)
+  // Espelho síncrono da sujeira: `salvar()` decide domínios a partir daqui para
+  // incluir um domínio que ficou sujo no meio do envio.
+  const sujeiraRef = useRef(sujeira)
+
+  useEffect(() => {
+    sujeiraRef.current = sujeira
+  }, [sujeira])
 
   const vitrinePreview: VitrineView = useMemo(() => {
     const paleta = obterPaleta(tema.paleta)
@@ -136,7 +144,7 @@ export function VitrineEditor({
   }, [sujeira])
 
   function atualizarPagina(atualiza: (pagina: PaginaExperiencia) => PaginaExperiencia) {
-    revisao.current += 1
+    revisaoConteudo.current += 1
     setPaginas((atuais) => atuais.map((p) => (p.id === paginaId ? atualiza(p) : p)))
     setSujeira((s) => marcarSujo(s, 'conteudo'))
   }
@@ -179,7 +187,7 @@ export function VitrineEditor({
 
   function adicionarPagina(template: ReturnType<typeof templates>[number]) {
     if (paginas.length >= CAPACIDADES.maxPages) return
-    revisao.current += 1
+    revisaoConteudo.current += 1
     const origem = template.paginas[0]
     const pagina: PaginaExperiencia = {
       ...origem,
@@ -194,13 +202,13 @@ export function VitrineEditor({
   }
 
   function renomearPagina(id: string, rotulo: string) {
-    revisao.current += 1
+    revisaoConteudo.current += 1
     setPaginas((atuais) => atuais.map((p) => (p.id === id ? { ...p, rotulo } : p)))
     setSujeira((s) => marcarSujo(s, 'conteudo'))
   }
 
   function removerPagina(id: string) {
-    revisao.current += 1
+    revisaoConteudo.current += 1
     setPaginas((atuais) => {
       if (atuais.length <= 1) return atuais
       const restantes = atuais.filter((p) => p.id !== id)
@@ -214,33 +222,41 @@ export function VitrineEditor({
   async function salvar() {
     setIsSaving(true)
     setErro(null)
-    const revisaoEnviada = revisao.current
-    const paginasEnviadas = paginas
-    const temaEnviado = tema
+    const erros: string[] = []
+
     try {
-      if (sujeira.conteudo) {
-        const resultado = await salvarExperienciaAction(paginasEnviadas)
+      if (sujeiraRef.current.conteudo) {
+        const revisaoEnviada = revisaoConteudo.current
+        const resultado = await salvarExperienciaAction(paginas)
         if (!resultado.ok) {
-          setErro(resultado.error)
-          return
+          erros.push(resultado.error)
+        } else if (revisaoConteudo.current === revisaoEnviada) {
+          sujeiraRef.current = limparSujo(sujeiraRef.current, 'conteudo')
+          setSujeira(sujeiraRef.current)
         }
-        setSujeira((s) =>
-          revisao.current === revisaoEnviada ? limparSujo(s, 'conteudo') : s
-        )
       }
-      if (sujeira.aparencia) {
-        const resultado = await alterarTemaAction(temaEnviado)
+
+      if (sujeiraRef.current.aparencia) {
+        const revisaoEnviada = revisaoAparencia.current
+        const resultado = await alterarTemaAction(tema)
         if (!resultado.ok) {
-          setErro(resultado.error)
-          return
+          erros.push(resultado.error)
+        } else if (revisaoAparencia.current === revisaoEnviada) {
+          sujeiraRef.current = limparSujo(sujeiraRef.current, 'aparencia')
+          setSujeira(sujeiraRef.current)
         }
-        setSujeira((s) =>
-          revisao.current === revisaoEnviada ? limparSujo(s, 'aparencia') : s
-        )
       }
-      toast.add({ title: 'Vitrine publicada', type: 'success' })
     } finally {
       setIsSaving(false)
+    }
+
+    if (erros.length > 0) {
+      setErro(erros.join(' '))
+      return
+    }
+
+    if (!temAlteracoes(sujeiraRef.current)) {
+      toast.add({ title: 'Vitrine publicada', type: 'success' })
     }
   }
 
@@ -306,7 +322,7 @@ export function VitrineEditor({
           <AparenciaPanel
             tema={tema}
             onChange={(patch) => {
-              revisao.current += 1
+              revisaoAparencia.current += 1
               setTema((atual) => ({ ...atual, ...patch }))
               setSujeira((s) => marcarSujo(s, 'aparencia'))
             }}
@@ -460,7 +476,7 @@ function BarraEditor({
       <div className="flex shrink-0 items-center gap-2">
         {temPendencia && <Badge variant="secondary">Alterações não salvas</Badge>}
         {acoes}
-        <Button size="sm" onClick={onSalvar} disabled={isSaving}>
+        <Button size="sm" onClick={onSalvar} disabled={isSaving || !temPendencia}>
           {isSaving ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
           {isSaving ? 'Salvando...' : 'Publicar'}
         </Button>
