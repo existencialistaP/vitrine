@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { MessageCircle, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -36,7 +36,7 @@ function Envolver({
   return <>{children}</>
 }
 
-export function ExperienceRenderer({
+export const ExperienceRenderer = memo(function ExperienceRenderer({
   blocks,
   vitrine,
   onAdd,
@@ -58,7 +58,7 @@ export function ExperienceRenderer({
       ))}
     </div>
   )
-}
+})
 
 function renderizar(
   block: BlocoExperiencia,

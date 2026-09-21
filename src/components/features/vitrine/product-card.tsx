@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Check, Plus, Store } from 'lucide-react'
 
@@ -73,7 +74,7 @@ function AcaoAdicionar({
   )
 }
 
-export function ProductCard({
+export const ProductCard = memo(function ProductCard({
   produto,
   onAdicionar,
   href,
@@ -170,4 +171,4 @@ export function ProductCard({
       </CardContent>
     </Card>
   )
-}
+})

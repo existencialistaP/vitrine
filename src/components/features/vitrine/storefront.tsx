@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { VitrineView } from '@/lib/vitrine-view'
 
@@ -10,7 +10,7 @@ import { VitrineHeader } from './vitrine-header'
 import { estiloTema } from './tema-vitrine'
 import { useCarrinho } from './use-carrinho'
 
-export function Storefront({
+export const Storefront = memo(function Storefront({
   vitrine,
   preview = false,
 }: {
@@ -77,4 +77,4 @@ export function Storefront({
       )}
     </div>
   )
-}
+})
