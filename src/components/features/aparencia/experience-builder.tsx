@@ -12,6 +12,7 @@ import {
   Lock,
   Pencil,
   Plus,
+  Settings2,
   Trash2,
 } from 'lucide-react'
 
@@ -138,6 +139,8 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
   const [renomeandoId, setRenomeandoId] = useState<string | null>(null)
   const [novoRotulo, setNovoRotulo] = useState('')
   const [adicionandoPagina, setAdicionandoPagina] = useState(false)
+  const [adicionandoBloco, setAdicionandoBloco] = useState(false)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
 
   const paginaAtiva = paginas.find((p) => p.id === paginaId) ?? paginas[0]
   const selected =
@@ -197,7 +200,11 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
       novoId = bloco.id
       return { ...p, blocos: [...p.blocos, bloco] }
     })
-    if (novoId) setSelectedId(novoId)
+    if (novoId) {
+      setSelectedId(novoId)
+      setAdicionandoBloco(false)
+      setEditandoId(novoId)
+    }
   }
 
   function adicionarPagina(template: ReturnType<typeof templates>[number]) {
@@ -260,6 +267,9 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
 
   const indiceAtiva = paginas.indexOf(paginaAtiva)
   const paginaRemovivel = indiceAtiva > 0
+  const blocoEditando = editandoId
+    ? (paginaAtiva?.blocos.find((b) => b.id === editandoId) ?? null)
+    : null
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -401,14 +411,24 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
             </CardContent>
           ) : (
             <CardContent className="grid gap-3 p-4 sm:p-6">
-              <div className="flex items-center justify-between rounded-lg border bg-background p-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background p-3 text-sm">
                 <span className="flex items-center gap-2 font-medium">
                   <Layers3 className="size-4 text-primary" />
                   Estrutura da página
                 </span>
-                <span className="text-muted-foreground">
-                  {paginaAtiva.blocos.length}/{capabilities.maxBlocks} blocos ·{' '}
-                  {paginas.length}/{capabilities.maxPages} páginas
+                <span className="flex items-center gap-3">
+                  <span className="text-muted-foreground">
+                    {paginaAtiva.blocos.length}/{capabilities.maxBlocks} blocos ·{' '}
+                    {paginas.length}/{capabilities.maxPages} páginas
+                  </span>
+                  <Button
+                    size="sm"
+                    disabled={paginaAtiva.blocos.length >= capabilities.maxBlocks}
+                    onClick={() => setAdicionandoBloco(true)}
+                  >
+                    <Plus data-icon="inline-start" />
+                    Adicionar bloco
+                  </Button>
                 </span>
               </div>
 
@@ -505,6 +525,17 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
                       <Button
                         variant="ghost"
                         size="icon-sm"
+                        aria-label="Configurar bloco"
+                        onClick={() => {
+                          setSelectedId(block.id)
+                          setEditandoId(block.id)
+                        }}
+                      >
+                        <Settings2 />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         aria-label={block.visible ? 'Ocultar bloco' : 'Mostrar bloco'}
                         onClick={() =>
                           setPaginas((atuais) =>
@@ -551,89 +582,6 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
             </CardContent>
           )}
         </Card>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Adicionar bloco</CardTitle>
-              <CardDescription>
-                Comece por um bloco essencial ou expanda sua narrativa.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Essenciais
-                </p>
-                {grouped.essential.map((item) => (
-                  <Button
-                    key={item.type}
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() => adicionar(item.type)}
-                  >
-                    <Plus data-icon="inline-start" />
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
-              <Separator />
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Avançados
-                  </p>
-                  {!capabilities.advanced && (
-                    <Lock className="size-3.5 text-muted-foreground" />
-                  )}
-                </div>
-                {grouped.advanced.map((item) => (
-                  <Button
-                    key={item.type}
-                    variant="outline"
-                    className="justify-start"
-                    disabled={!capabilities.advanced}
-                    onClick={() => adicionar(item.type)}
-                  >
-                    {capabilities.advanced ? (
-                      <Plus data-icon="inline-start" />
-                    ) : (
-                      <Lock data-icon="inline-start" />
-                    )}
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Propriedades</CardTitle>
-              <CardDescription>
-                {selected
-                  ? `Editando ${selected.label}`
-                  : 'Selecione um bloco para editar.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selected ? (
-                <BlockForm
-                  key={selected.id}
-                  bloco={selected}
-                  produtos={base?.produtos ?? []}
-                  categorias={base?.categorias ?? []}
-                  onChange={(props) => mudarBloco(selected.id, props)}
-                  onLabelChange={(label) => mudarLabel(selected.id, label)}
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Adicione um bloco para começar a personalizar o conteúdo.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
       <PreviewVitrine
@@ -642,6 +590,93 @@ export function ExperienceBuilder({ plan = 'LIVRE' }: { plan?: StorePlan }) {
         aberto={previewAberto}
         onAbrirChange={setPreviewAberto}
       />
+
+      <Dialog open={adicionandoBloco} onOpenChange={setAdicionandoBloco}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar bloco</DialogTitle>
+            <DialogDescription>
+              Comece por um bloco essencial ou expanda sua narrativa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex max-h-[50vh] flex-col gap-4 overflow-y-auto">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Essenciais
+              </p>
+              {grouped.essential.map((item) => (
+                <Button
+                  key={item.type}
+                  variant="outline"
+                  className="justify-start"
+                  onClick={() => adicionar(item.type)}
+                >
+                  <Plus data-icon="inline-start" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+            <Separator />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Avançados
+                </p>
+                {!capabilities.advanced && (
+                  <Lock className="size-3.5 text-muted-foreground" />
+                )}
+              </div>
+              {grouped.advanced.map((item) => (
+                <Button
+                  key={item.type}
+                  variant="outline"
+                  className="justify-start"
+                  disabled={!capabilities.advanced}
+                  onClick={() => adicionar(item.type)}
+                >
+                  {capabilities.advanced ? (
+                    <Plus data-icon="inline-start" />
+                  ) : (
+                    <Lock data-icon="inline-start" />
+                  )}
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={blocoEditando !== null}
+        onOpenChange={(aberto) => !aberto && setEditandoId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Propriedades do bloco</DialogTitle>
+            <DialogDescription>
+              {blocoEditando
+                ? `Editando ${blocoEditando.label}`
+                : 'Selecione um bloco para editar.'}
+            </DialogDescription>
+          </DialogHeader>
+          {blocoEditando && (
+            <div className="max-h-[60vh] overflow-y-auto">
+              <BlockForm
+                key={blocoEditando.id}
+                bloco={blocoEditando}
+                produtos={base?.produtos ?? []}
+                categorias={base?.categorias ?? []}
+                onChange={(props) => mudarBloco(blocoEditando.id, props)}
+                onLabelChange={(label) => mudarLabel(blocoEditando.id, label)}
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setEditandoId(null)}>Concluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={renomeandoId !== null} onOpenChange={(aberto) => !aberto && setRenomeandoId(null)}>
         <DialogContent>
