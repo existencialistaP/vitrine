@@ -30,6 +30,9 @@ export class InMemoryLojaRepository implements LojaRepository {
 
   async save(loja: Loja): Promise<Loja> {
     const id = loja.getId().toUUID();
+    // Espelha PrismaLojaRepository.save: cada gravação avança a versão, de modo
+    // que o mapa interno e loja.getVersion() permaneçam em sincronia.
+    loja.bumpVersion();
     this.dados.set(id, loja);
     this.versoes.set(id, loja.getVersion() ?? this.versoes.get(id) ?? 1);
     return loja;

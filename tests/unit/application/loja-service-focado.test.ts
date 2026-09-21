@@ -6,9 +6,38 @@ import { AdicionarProduto } from "@/modules/loja/application/commands/adicionar-
 import { AlterarTema } from "@/modules/loja/application/commands/alterar-tema";
 import { SalvarExperiencia } from "@/modules/loja/application/commands/salvar-experiencia";
 import { DadosDesatualizados } from "@/modules/loja/domain/exceptions/dados-desatualizados";
+import type { Loja } from "@/modules/loja/domain/loja";
 import { InMemoryLojaRepository } from "@tests/helpers/in-memory-loja-repository";
 import { FakeEventBus } from "@tests/helpers/fake-event-bus";
 import { LojistaId } from "@/kernel/ids/lojista-id";
+
+const TEMA = {
+  paleta: "BLUSH",
+  estilo: "MODERNO",
+  formatoCard: "RETRATO",
+  layout: "LISTA",
+  fonte: "SANS",
+} as const;
+
+/** Conta as chamadas de escrita para distinguir gravação focada de save completo. */
+class RepoGravador extends InMemoryLojaRepository {
+  readonly chamadas = { save: 0, atualizarExperiencia: 0, atualizarTema: 0 };
+
+  override async save(loja: Loja): Promise<Loja> {
+    this.chamadas.save += 1;
+    return super.save(loja);
+  }
+
+  override async atualizarExperiencia(loja: Loja): Promise<void> {
+    this.chamadas.atualizarExperiencia += 1;
+    return super.atualizarExperiencia(loja);
+  }
+
+  override async atualizarTema(loja: Loja): Promise<void> {
+    this.chamadas.atualizarTema += 1;
+    return super.atualizarTema(loja);
+  }
+}
 
 const PAGINAS = [
   {
@@ -74,6 +103,64 @@ describe("LojaService — gravação focada", () => {
     );
 
     const loja = await repository.findById(lojaId);
+    expect(loja?.getTema().getPaleta()).toBe("BLUSH");
+    expect(loja?.getProdutos()).toHaveLength(1);
+  });
+
+  it("salvar experiência usa gravação focada e não chama save", async () => {
+    const gravador = new RepoGravador();
+    const servicoGravador = new LojaService(gravador, eventBus);
+    const lojaId = await servicoGravador.handle(
+      CriarLoja.from({ lojistaId: LojistaId.random().toUUID(), nome: "Café", whatsapp: "41999998888" })
+    );
+    await servicoGravador.handle(
+      AdicionarProduto.from({ lojaId: lojaId.toUUID(), nome: "Bolo", precoCents: 1500 })
+    );
+
+    gravador.chamadas.save = 0;
+
+    await servicoGravador.handle(
+      SalvarExperiencia.from({ lojaId: lojaId.toUUID(), paginas: PAGINAS })
+    );
+
+    expect(gravador.chamadas.atualizarExperiencia).toBe(1);
+    expect(gravador.chamadas.atualizarTema).toBe(0);
+    expect(gravador.chamadas.save).toBe(0);
+    const loja = await gravador.findById(lojaId);
+    expect(loja?.getExperiencia().getPaginas()).toHaveLength(1);
+    expect(loja?.getProdutos()).toHaveLength(1);
+  });
+
+  it("salvar tema usa gravação focada e não chama save", async () => {
+    const gravador = new RepoGravador();
+    const servicoGravador = new LojaService(gravador, eventBus);
+    const lojaId = await servicoGravador.handle(
+      CriarLoja.from({ lojistaId: LojistaId.random().toUUID(), nome: "Café", whatsapp: "41999998888" })
+    );
+    await servicoGravador.handle(
+      AdicionarProduto.from({ lojaId: lojaId.toUUID(), nome: "Bolo", precoCents: 1500 })
+    );
+
+    gravador.chamadas.save = 0;
+
+    await servicoGravador.handle(AlterarTema.from({ lojaId: lojaId.toUUID(), ...TEMA }));
+
+    expect(gravador.chamadas.atualizarTema).toBe(1);
+    expect(gravador.chamadas.atualizarExperiencia).toBe(0);
+    expect(gravador.chamadas.save).toBe(0);
+    const loja = await gravador.findById(lojaId);
+    expect(loja?.getTema().getPaleta()).toBe("BLUSH");
+    expect(loja?.getProdutos()).toHaveLength(1);
+  });
+
+  it("duas gravações focadas consecutivas não disparam conflito espúrio", async () => {
+    const lojaId = await criarComProduto();
+
+    await service.handle(SalvarExperiencia.from({ lojaId: lojaId.toUUID(), paginas: PAGINAS }));
+    await service.handle(AlterarTema.from({ lojaId: lojaId.toUUID(), ...TEMA }));
+
+    const loja = await repository.findById(lojaId);
+    expect(loja?.getExperiencia().getPaginas()).toHaveLength(1);
     expect(loja?.getTema().getPaleta()).toBe("BLUSH");
     expect(loja?.getProdutos()).toHaveLength(1);
   });
