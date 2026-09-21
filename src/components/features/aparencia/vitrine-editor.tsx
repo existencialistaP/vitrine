@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react'
 
 import { salvarExperienciaAction } from '@/app/actions/experiencia'
@@ -56,7 +50,6 @@ import { AparenciaPanel } from './aparencia-panel'
 import { ConteudoPanel } from './conteudo-panel'
 import { limparSujo, marcarSujo, sujeiraInicial, temAlteracoes } from './editor-estado'
 import { PreviewPanel } from './preview-panel'
-import { resolverLargura } from './preview-dispositivos'
 import { useEditorPreferencias } from './use-editor-preferencias'
 
 const CAPACIDADES = planCapabilities.LIVRE
@@ -81,12 +74,6 @@ export function VitrineEditor({
   const [sujeira, setSujeira] = useState(sujeiraInicial)
   const [isSaving, setIsSaving] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [previewMobileAberto, setPreviewMobileAberto] = useState(false)
-  // Último estado confirmado no servidor: base do descarte de rascunho (RF-10).
-  const [ultimoSalvo, setUltimoSalvo] = useState<{
-    paginas: PaginaExperiencia[]
-    tema: TemaView
-  }>({ paginas: paginasIniciais, tema: temaInicial })
   // Revisão do rascunho: distingue edições feitas durante o envio (RF-9).
   const revisao = useRef(0)
 
@@ -136,9 +123,7 @@ export function VitrineEditor({
       const url = new URL(link.href, window.location.href)
       if (url.origin !== window.location.origin) return
       if (url.pathname === window.location.pathname && url.search === window.location.search) return
-      const confirmar = window.confirm(
-        'Há alterações não salvas neste modo. Descartar e trocar?'
-      )
+      const confirmar = window.confirm('Há alterações não salvas. Sair e descartar?')
       if (!confirmar) {
         evento.preventDefault()
         evento.stopPropagation()
@@ -149,30 +134,6 @@ export function VitrineEditor({
     document.addEventListener('click', aoClicar, true)
     return () => document.removeEventListener('click', aoClicar, true)
   }, [sujeira])
-
-  function trocarModo(proximo: 'conteudo' | 'aparencia') {
-    if (proximo === modo) return
-    if (sujeira[modo]) {
-      const confirmar = window.confirm(
-        'Há alterações não salvas neste modo. Descartar e trocar?'
-      )
-      if (!confirmar) return
-      setSujeira((s) => limparSujo(s, modo))
-      restaurarRascunho(modo)
-    }
-    setModo(proximo)
-  }
-
-  // Ao descartar, restaura o estado do domínio a partir do último estado salvo.
-  function restaurarRascunho(dominio: 'conteudo' | 'aparencia') {
-    if (dominio === 'conteudo') {
-      setPaginas(ultimoSalvo.paginas)
-      setPaginaId(ultimoSalvo.paginas[0]?.id ?? '')
-      setSelectedId(ultimoSalvo.paginas[0]?.blocos[0]?.id ?? null)
-    } else {
-      setTema(ultimoSalvo.tema)
-    }
-  }
 
   function atualizarPagina(atualiza: (pagina: PaginaExperiencia) => PaginaExperiencia) {
     revisao.current += 1
@@ -250,61 +211,37 @@ export function VitrineEditor({
     setSujeira((s) => marcarSujo(s, 'conteudo'))
   }
 
-  async function salvarConteudo() {
+  async function salvar() {
     setIsSaving(true)
     setErro(null)
     const revisaoEnviada = revisao.current
     const paginasEnviadas = paginas
-    try {
-      const resultado = await salvarExperienciaAction(paginasEnviadas)
-      if (!resultado.ok) {
-        setErro(resultado.error)
-        return
-      }
-      setUltimoSalvo((atual) => ({ ...atual, paginas: paginasEnviadas }))
-      setSujeira((s) =>
-        revisao.current === revisaoEnviada ? limparSujo(s, 'conteudo') : s
-      )
-      toast.add({ title: 'Vitrine publicada', description: 'Suas páginas foram atualizadas.', type: 'success' })
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  async function salvarAparencia() {
-    setIsSaving(true)
-    setErro(null)
-    const revisaoEnviada = revisao.current
     const temaEnviado = tema
     try {
-      const resultado = await alterarTemaAction(temaEnviado)
-      if (!resultado.ok) {
-        setErro(resultado.error)
-        return
+      if (sujeira.conteudo) {
+        const resultado = await salvarExperienciaAction(paginasEnviadas)
+        if (!resultado.ok) {
+          setErro(resultado.error)
+          return
+        }
+        setSujeira((s) =>
+          revisao.current === revisaoEnviada ? limparSujo(s, 'conteudo') : s
+        )
       }
-      setUltimoSalvo((atual) => ({ ...atual, tema: temaEnviado }))
-      setSujeira((s) =>
-        revisao.current === revisaoEnviada ? limparSujo(s, 'aparencia') : s
-      )
-      toast.add({ title: 'Aparência salva', description: 'Sua vitrine já reflete o novo visual.', type: 'success' })
+      if (sujeira.aparencia) {
+        const resultado = await alterarTemaAction(temaEnviado)
+        if (!resultado.ok) {
+          setErro(resultado.error)
+          return
+        }
+        setSujeira((s) =>
+          revisao.current === revisaoEnviada ? limparSujo(s, 'aparencia') : s
+        )
+      }
+      toast.add({ title: 'Vitrine publicada', type: 'success' })
     } finally {
       setIsSaving(false)
     }
-  }
-
-  function redimensionar(evento: ReactPointerEvent<HTMLDivElement>) {
-    evento.preventDefault()
-    const inicio = evento.clientX
-    const larguraInicial = prefs.largura ?? 640
-    const aoMover = (movimento: PointerEvent) => {
-      atualizar({ largura: resolverLargura(larguraInicial + (inicio - movimento.clientX)) })
-    }
-    const aoSoltar = () => {
-      window.removeEventListener('pointermove', aoMover)
-      window.removeEventListener('pointerup', aoSoltar)
-    }
-    window.addEventListener('pointermove', aoMover)
-    window.addEventListener('pointerup', aoSoltar)
   }
 
   return (
@@ -314,13 +251,21 @@ export function VitrineEditor({
         paginaId={paginaId}
         temPendencia={temAlteracoes(sujeira)}
         isSaving={isSaving}
-        modo={modo}
         podeRemoverPagina={paginas.length > 1}
         onTrocarPagina={setPaginaId}
         onAdicionarPagina={adicionarPagina}
         onRenomearPagina={renomearPagina}
         onRemoverPagina={removerPagina}
-        onSalvar={modo === 'conteudo' ? salvarConteudo : salvarAparencia}
+        onSalvar={salvar}
+        acoes={
+          <PreviewPanel
+            vitrine={vitrinePreview}
+            prefs={prefs}
+            onAtualizar={atualizar}
+            paginaId={paginaId}
+            onTrocarPagina={setPaginaId}
+          />
+        }
       />
 
       {erro && (
@@ -330,65 +275,45 @@ export function VitrineEditor({
         </Alert>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card">
-          <Tabs value={modo} onValueChange={(v) => trocarModo(v as 'conteudo' | 'aparencia')}>
-            <div className="border-b p-2">
-              <TabsList>
-                <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
-                <TabsTrigger value="aparencia">Aparência</TabsTrigger>
-              </TabsList>
-            </div>
-          </Tabs>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card">
+        <Tabs value={modo} onValueChange={(v) => setModo(v as 'conteudo' | 'aparencia')}>
+          <div className="border-b p-2">
+            <TabsList>
+              <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
+              <TabsTrigger value="aparencia">Aparência</TabsTrigger>
+            </TabsList>
+          </div>
+        </Tabs>
 
-          {modo === 'conteudo' ? (
-            <ConteudoPanel
-              paginas={paginas}
-              paginaId={paginaId}
-              selectedId={selectedId}
-              onSelecionarBloco={setSelectedId}
-              onAtualizarBloco={onAtualizarBloco}
-              onMoverBloco={onMoverBloco}
-              onDuplicarBloco={onDuplicarBloco}
-              onAlternarVisivel={onAlternarVisivel}
-              onRemoverBloco={onRemoverBloco}
-              onAdicionarBloco={onAdicionarBloco}
-              base={base}
-              isSaving={isSaving}
-              maxBlocks={CAPACIDADES.maxBlocks}
-              advanced={CAPACIDADES.advanced}
-            />
-          ) : (
-            <AparenciaPanel
-              tema={tema}
-              onChange={(patch) => {
-                revisao.current += 1
-                setTema((atual) => ({ ...atual, ...patch }))
-                setSujeira((s) => marcarSujo(s, 'aparencia'))
-              }}
-              modoAvancado={prefs.modoAvancado}
-              onModoAvancadoChange={(ativo) => atualizar({ modoAvancado: ativo })}
-            />
-          )}
-        </div>
-
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Redimensionar prévia"
-          onPointerDown={redimensionar}
-          className="hidden w-1 shrink-0 cursor-col-resize self-stretch rounded-full bg-border transition-colors hover:bg-primary/40 lg:block"
-        />
-
-        <PreviewPanel
-          vitrine={vitrinePreview}
-          prefs={prefs}
-          onAtualizar={atualizar}
-          abertoMobile={previewMobileAberto}
-          onAbertoMobileChange={setPreviewMobileAberto}
-          paginaId={paginaId}
-          onTrocarPagina={setPaginaId}
-        />
+        {modo === 'conteudo' ? (
+          <ConteudoPanel
+            paginas={paginas}
+            paginaId={paginaId}
+            selectedId={selectedId}
+            onSelecionarBloco={setSelectedId}
+            onAtualizarBloco={onAtualizarBloco}
+            onMoverBloco={onMoverBloco}
+            onDuplicarBloco={onDuplicarBloco}
+            onAlternarVisivel={onAlternarVisivel}
+            onRemoverBloco={onRemoverBloco}
+            onAdicionarBloco={onAdicionarBloco}
+            base={base}
+            isSaving={isSaving}
+            maxBlocks={CAPACIDADES.maxBlocks}
+            advanced={CAPACIDADES.advanced}
+          />
+        ) : (
+          <AparenciaPanel
+            tema={tema}
+            onChange={(patch) => {
+              revisao.current += 1
+              setTema((atual) => ({ ...atual, ...patch }))
+              setSujeira((s) => marcarSujo(s, 'aparencia'))
+            }}
+            modoAvancado={prefs.modoAvancado}
+            onModoAvancadoChange={(ativo) => atualizar({ modoAvancado: ativo })}
+          />
+        )}
       </div>
     </div>
   )
@@ -399,25 +324,25 @@ function BarraEditor({
   paginaId,
   temPendencia,
   isSaving,
-  modo,
   podeRemoverPagina,
   onTrocarPagina,
   onAdicionarPagina,
   onRenomearPagina,
   onRemoverPagina,
   onSalvar,
+  acoes,
 }: {
   paginas: PaginaExperiencia[]
   paginaId: string
   temPendencia: boolean
   isSaving: boolean
-  modo: 'conteudo' | 'aparencia'
   podeRemoverPagina: boolean
   onTrocarPagina: (id: string) => void
   onAdicionarPagina: (template: ReturnType<typeof templates>[number]) => void
   onRenomearPagina: (id: string, rotulo: string) => void
   onRemoverPagina: (id: string) => void
   onSalvar: () => void
+  acoes: ReactNode
 }) {
   const paginaAtiva = paginas.find((p) => p.id === paginaId) ?? paginas[0]
   const [renomeando, setRenomeando] = useState(false)
@@ -534,9 +459,10 @@ function BarraEditor({
 
       <div className="flex shrink-0 items-center gap-2">
         {temPendencia && <Badge variant="secondary">Alterações não salvas</Badge>}
+        {acoes}
         <Button size="sm" onClick={onSalvar} disabled={isSaving}>
           {isSaving ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
-          {isSaving ? 'Salvando...' : modo === 'conteudo' ? 'Publicar' : 'Salvar'}
+          {isSaving ? 'Salvando...' : 'Publicar'}
         </Button>
       </div>
     </div>

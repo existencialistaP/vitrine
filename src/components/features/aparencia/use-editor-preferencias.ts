@@ -24,7 +24,8 @@ const PADRAO: PreferenciasEditor = {
   modoAvancado: false,
   dispositivo: DISPOSITIVO_PADRAO,
   largura: null,
-  oculta: false,
+  // Prévia começa fechada: o disparo vive na barra do editor (dropdown).
+  oculta: true,
   telaCheia: false,
 }
 

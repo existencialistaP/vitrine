@@ -1,16 +1,14 @@
 'use client'
 
-import { useDeferredValue } from 'react'
-import { Eye, EyeOff, Maximize2, Minimize2, Monitor, Smartphone, Tablet } from 'lucide-react'
+import { useDeferredValue, type PointerEvent as ReactPointerEvent } from 'react'
+import { EyeOff, Maximize2, Minimize2, Monitor, Smartphone, Tablet } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Storefront } from '@/components/features/vitrine/storefront'
 import type { VitrineView } from '@/lib/vitrine-view'
 
-import { DISPOSITIVOS, type DispositivoId } from './preview-dispositivos'
-import { useMediaQuery } from './use-media-query'
+import { DISPOSITIVOS, resolverLargura, type DispositivoId } from './preview-dispositivos'
 import type { PreferenciasEditor } from './use-editor-preferencias'
 
 const ICONES: Record<DispositivoId, typeof Smartphone> = {
@@ -19,16 +17,16 @@ const ICONES: Record<DispositivoId, typeof Smartphone> = {
   desktop: Monitor,
 }
 
+const LARGURA_INICIAL = 640
+
 function BarraPreview({
   prefs,
   onAtualizar,
-  onOcultar,
-  rotuloOcultar,
+  onFechar,
 }: {
   prefs: PreferenciasEditor
   onAtualizar: (patch: Partial<PreferenciasEditor>) => void
-  onOcultar: () => void
-  rotuloOcultar: string
+  onFechar: () => void
 }) {
   return (
     <div className="flex items-center gap-1 border-b p-2">
@@ -56,20 +54,17 @@ function BarraPreview({
         size="icon-sm"
         aria-label={prefs.telaCheia ? 'Sair da tela cheia' : 'Abrir prévia em tela cheia'}
         aria-pressed={prefs.telaCheia}
-        onClick={() => onAtualizar({ telaCheia: !prefs.telaCheia })}
+        onClick={() =>
+          onAtualizar(
+            prefs.telaCheia
+              ? { telaCheia: false }
+              : { telaCheia: true, largura: null }
+          )
+        }
       >
-        {prefs.telaCheia ? (
-          <Minimize2 aria-hidden="true" />
-        ) : (
-          <Maximize2 aria-hidden="true" />
-        )}
+        {prefs.telaCheia ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
       </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label={rotuloOcultar}
-        onClick={onOcultar}
-      >
+      <Button variant="ghost" size="icon-sm" aria-label="Fechar prévia" onClick={onFechar}>
         <EyeOff aria-hidden="true" />
       </Button>
     </div>
@@ -78,30 +73,46 @@ function BarraPreview({
 
 function Moldura({
   vitrine,
-  largura,
+  prefs,
   paginaId,
   onTrocarPagina,
+  onRedimensionar,
 }: {
   vitrine: VitrineView
-  largura: number | null
+  prefs: PreferenciasEditor
   paginaId: string
   onTrocarPagina: (id: string) => void
+  onRedimensionar: (evento: ReactPointerEvent<HTMLDivElement>) => void
 }) {
-  // Deferir o objeto inteiro só tem efeito com o Storefront memoizado (Task 3):
+  // Deferir o objeto inteiro só tem efeito com o Storefront memoizado:
   // no render urgente (tecla) a criança memoizada ignora a referência antiga.
   const vitrineDeferida = useDeferredValue(vitrine)
   return (
-    <div className="flex min-h-0 flex-1 justify-center overflow-auto bg-muted/40 p-3">
+    <div className="flex min-h-0 flex-1 justify-center overflow-hidden bg-muted/40 p-4">
       <div
-        className="overflow-hidden rounded-xl ring-1 ring-border"
-        style={{ width: largura ?? '100%', maxWidth: '100%' }}
+        className="relative h-full max-h-full"
+        style={{
+          width: prefs.telaCheia ? '100%' : prefs.largura ?? '100%',
+          maxWidth: '100%',
+        }}
       >
-        <Storefront
-          vitrine={vitrineDeferida}
-          preview
-          paginaId={paginaId}
-          onTrocarPagina={onTrocarPagina}
-        />
+        <div className="h-full overflow-y-auto rounded-xl ring-1 ring-border">
+          <Storefront
+            vitrine={vitrineDeferida}
+            preview
+            paginaId={paginaId}
+            onTrocarPagina={onTrocarPagina}
+          />
+        </div>
+        {!prefs.telaCheia && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Redimensionar prévia"
+            onPointerDown={onRedimensionar}
+            className="absolute -right-1 top-0 h-full w-2 cursor-col-resize touch-none"
+          />
+        )}
       </div>
     </div>
   )
@@ -111,104 +122,75 @@ export function PreviewPanel({
   vitrine,
   prefs,
   onAtualizar,
-  abertoMobile,
-  onAbertoMobileChange,
   paginaId,
   onTrocarPagina,
 }: {
   vitrine: VitrineView
   prefs: PreferenciasEditor
   onAtualizar: (patch: Partial<PreferenciasEditor>) => void
-  abertoMobile: boolean
-  onAbertoMobileChange: (aberto: boolean) => void
   paginaId: string
   onTrocarPagina: (id: string) => void
 }) {
-  const ehDesktop = useMediaQuery('(min-width: 64rem)')
-
-  // "Ocultar" age sobre a superfície visível: tela cheia fecha o Dialog,
-  // desktop recolhe a coluna persistente, mobile/tablet fecha o Sheet.
-  const aoOcultar = () => {
-    if (prefs.telaCheia) {
-      onAtualizar({ telaCheia: false })
-      return
+  function redimensionar(evento: ReactPointerEvent<HTMLDivElement>) {
+    evento.preventDefault()
+    const inicio = evento.clientX
+    const larguraInicial = prefs.largura ?? LARGURA_INICIAL
+    const aoMover = (movimento: PointerEvent) => {
+      onAtualizar({ largura: resolverLargura(larguraInicial + (movimento.clientX - inicio)) })
     }
-    if (ehDesktop) {
-      onAtualizar({ oculta: true })
-      return
+    const aoSoltar = () => {
+      window.removeEventListener('pointermove', aoMover)
+      window.removeEventListener('pointerup', aoSoltar)
     }
-    onAbertoMobileChange(false)
+    window.addEventListener('pointermove', aoMover)
+    window.addEventListener('pointerup', aoSoltar)
   }
 
-  const conteudo = (
-    <div className="flex h-full min-h-0 flex-col">
-      <BarraPreview
-        prefs={prefs}
-        onAtualizar={onAtualizar}
-        onOcultar={aoOcultar}
-        rotuloOcultar={prefs.telaCheia || !ehDesktop ? 'Fechar prévia' : 'Ocultar prévia'}
-      />
-      <Moldura
-        vitrine={vitrine}
-        largura={prefs.largura}
-        paginaId={paginaId}
-        onTrocarPagina={onTrocarPagina}
-      />
-    </div>
-  )
-
-  const mostrarColuna = ehDesktop && !prefs.oculta && !prefs.telaCheia
+  function fechar() {
+    onAtualizar({ oculta: true, telaCheia: false })
+  }
 
   return (
     <>
-      {mostrarColuna ? (
-        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card">
-          {conteudo}
-        </div>
-      ) : null}
+      <Button
+        variant="outline"
+        size="sm"
+        aria-haspopup="dialog"
+        aria-expanded={!prefs.oculta}
+        onClick={() => onAtualizar({ oculta: !prefs.oculta })}
+      >
+        Prévia
+      </Button>
 
-      {ehDesktop && prefs.oculta ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => onAtualizar({ oculta: false })}
-        >
-          <Eye data-icon="inline-start" />
-          Mostrar prévia
-        </Button>
-      ) : null}
-
-      {!ehDesktop && !prefs.telaCheia ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => onAbertoMobileChange(true)}
-        >
-          <Eye data-icon="inline-start" />
-          Prévia
-        </Button>
-      ) : null}
-
-      <Sheet open={abertoMobile} onOpenChange={onAbertoMobileChange}>
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          className="data-[side=bottom]:h-[85svh] p-0"
-        >
-          <SheetTitle className="sr-only">Prévia da vitrine</SheetTitle>
-          {conteudo}
-        </SheetContent>
-      </Sheet>
-
-      <Dialog open={prefs.telaCheia} onOpenChange={(aberto) => onAtualizar({ telaCheia: aberto })}>
+      <Dialog
+        open={!prefs.oculta}
+        onOpenChange={(aberto) => {
+          if (!aberto) fechar()
+          else onAtualizar({ oculta: false })
+        }}
+      >
         <DialogContent
           showCloseButton={false}
-          className="h-[92svh] w-[95vw] max-w-none p-0 sm:max-w-none"
+          className={
+            prefs.telaCheia
+              ? 'fixed top-4 left-1/2 flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none -translate-x-1/2 flex-col gap-0 p-0 sm:max-w-none'
+              : 'fixed top-20 left-1/2 flex w-[min(1100px,95vw)] max-w-none -translate-x-1/2 flex-col gap-0 p-0 sm:max-w-none'
+          }
+          style={
+            prefs.telaCheia
+              ? undefined
+              : { height: 'min(calc(100dvh - 7rem), 70svh)' }
+          }
         >
-          <DialogTitle className="sr-only">Prévia em tela cheia</DialogTitle>
-          {conteudo}
+          <DialogTitle className="sr-only">Prévia da vitrine</DialogTitle>
+          <BarraPreview prefs={prefs} onAtualizar={onAtualizar} onFechar={fechar} />
+          <Moldura
+            vitrine={vitrine}
+            prefs={prefs}
+            paginaId={paginaId}
+            onTrocarPagina={onTrocarPagina}
+            onRedimensionar={redimensionar}
+          />
         </DialogContent>
       </Dialog>
     </>
