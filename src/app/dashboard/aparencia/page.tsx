@@ -1,36 +1,27 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ExperienceBuilder } from '@/components/features/aparencia/experience-builder'
-import { TemaForm } from '@/components/features/aparencia/tema-form'
-import {
-  PageHeader,
-  PageHeaderContent,
-  PageHeaderDescription,
-  PageHeaderTitle,
-} from '@/components/layout/page-header'
+import { VitrineEditor } from '@/components/features/aparencia/vitrine-editor'
+import { initialPages, type PaginaExperiencia } from '@/lib/experience'
+import { container, requireMinhaLoja } from '@/lib/loja'
+import { serializeVitrineBase } from '@/lib/vitrine-view'
 
-export default function AparenciaPage() {
+export default async function AparenciaPage() {
+  const loja = await requireMinhaLoja()
+
+  const paginas = loja.getExperiencia().getPaginas()
+  const tema = loja.getTema()
+  const vitrine = await container.catalogoService.listarPorId(loja.getId().toUUID())
+
   return (
-    <>
-      <PageHeader>
-        <PageHeaderContent>
-          <PageHeaderTitle>Construtor da vitrine</PageHeaderTitle>
-          <PageHeaderDescription>
-            Crie páginas completas com blocos de conteúdo, coleções e histórias da sua marca.
-          </PageHeaderDescription>
-        </PageHeaderContent>
-      </PageHeader>
-      <Tabs defaultValue="construtor">
-        <TabsList>
-          <TabsTrigger value="construtor">Construtor</TabsTrigger>
-          <TabsTrigger value="aparencia">Aparência</TabsTrigger>
-        </TabsList>
-        <TabsContent value="construtor">
-          <ExperienceBuilder />
-        </TabsContent>
-        <TabsContent value="aparencia">
-          <TemaForm />
-        </TabsContent>
-      </Tabs>
-    </>
+    <VitrineEditor
+      paginasIniciais={(paginas.length > 0 ? [...paginas] : initialPages) as PaginaExperiencia[]}
+      base={serializeVitrineBase(vitrine)}
+      temaInicial={{
+        paleta: tema.getPaleta(),
+        estilo: tema.getEstilo(),
+        formatoCard: tema.getFormatoCard(),
+        layout: tema.getLayout(),
+        fonte: tema.getFonte(),
+        logoUrl: tema.getLogoUrl()?.getValue() ?? null,
+      }}
+    />
   )
 }

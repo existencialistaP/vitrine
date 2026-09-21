@@ -38,7 +38,7 @@ const ITENS: NavItem[] = [
   { href: '/dashboard', label: 'Visão geral', icon: LayoutDashboard },
   { href: '/dashboard/produtos', label: 'Produtos', icon: Package },
   { href: '/dashboard/categorias', label: 'Categorias', icon: Tags },
-  { href: '/dashboard/aparencia', label: 'Aparência', icon: Palette },
+  { href: '/dashboard/aparencia', label: 'Vitrine', icon: Palette },
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ]
 

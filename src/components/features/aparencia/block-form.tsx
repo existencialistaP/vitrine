@@ -249,18 +249,11 @@ function ListaEditor({
 export function BlockForm({
   bloco,
   onChange,
-  onLabelChange,
   produtos,
   categorias,
 }: {
   bloco: BlocoExperiencia
   onChange: (valores: { label: string } & Record<string, unknown>) => void
-  /**
-   * @deprecated Compatibilidade temporária com o construtor legado.
-   * O label agora faz parte do payload de `onChange` e este prop será
-   * removido junto com `experience-builder.tsx` (Task 6).
-   */
-  onLabelChange?: (label: string) => void
   produtos: { id: string; nome: string }[]
   categorias: { id: string; nome: string }[]
 }) {
@@ -283,7 +276,6 @@ export function BlockForm({
     const valores = form.getValues()
     const { label, ...props } = valores
     onChange({ label: String(label), ...props })
-    onLabelChange?.(String(label))
   }
 
   const campos = camposPara(bloco.type)
