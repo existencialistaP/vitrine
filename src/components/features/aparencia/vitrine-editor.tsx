@@ -75,6 +75,11 @@ export function VitrineEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [previewMobileAberto, setPreviewMobileAberto] = useState(false)
+  // Último estado confirmado no servidor: base do descarte de rascunho (RF-10).
+  const [ultimoSalvo, setUltimoSalvo] = useState<{
+    paginas: PaginaExperiencia[]
+    tema: TemaView
+  }>({ paginas: paginasIniciais, tema: temaInicial })
 
   const vitrinePreview: VitrineView = useMemo(() => {
     const paleta = obterPaleta(tema.paleta)
@@ -119,10 +124,15 @@ export function VitrineEditor({
     setModo(proximo)
   }
 
-  // Ao descartar, restaura o estado do domínio a partir das props iniciais.
+  // Ao descartar, restaura o estado do domínio a partir do último estado salvo.
   function restaurarRascunho(dominio: 'conteudo' | 'aparencia') {
-    if (dominio === 'conteudo') setPaginas(paginasIniciais)
-    else setTema(temaInicial)
+    if (dominio === 'conteudo') {
+      setPaginas(ultimoSalvo.paginas)
+      setPaginaId(ultimoSalvo.paginas[0]?.id ?? '')
+      setSelectedId(ultimoSalvo.paginas[0]?.blocos[0]?.id ?? null)
+    } else {
+      setTema(ultimoSalvo.tema)
+    }
   }
 
   function atualizarPagina(atualiza: (pagina: PaginaExperiencia) => PaginaExperiencia) {
@@ -208,6 +218,7 @@ export function VitrineEditor({
         setErro(resultado.error)
         return
       }
+      setUltimoSalvo((atual) => ({ ...atual, paginas }))
       setSujeira((s) => limparSujo(s, 'conteudo'))
       toast.add({ title: 'Vitrine publicada', description: 'Suas páginas foram atualizadas.', type: 'success' })
     } finally {
@@ -224,6 +235,7 @@ export function VitrineEditor({
         setErro(resultado.error)
         return
       }
+      setUltimoSalvo((atual) => ({ ...atual, tema }))
       setSujeira((s) => limparSujo(s, 'aparencia'))
       toast.add({ title: 'Aparência salva', description: 'Sua vitrine já reflete o novo visual.', type: 'success' })
     } finally {
