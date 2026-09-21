@@ -15,7 +15,12 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Storefront } from '@/components/features/vitrine/storefront'
 import type { VitrineView } from '@/lib/vitrine-view'
 
-import { DISPOSITIVOS, resolverLargura, type DispositivoId } from './preview-dispositivos'
+import {
+  DISPOSITIVOS,
+  LARGURA_MAX,
+  resolverLargura,
+  type DispositivoId,
+} from './preview-dispositivos'
 import type { PreferenciasEditor } from './use-editor-preferencias'
 
 const ICONES: Record<DispositivoId, typeof Smartphone> = {
@@ -152,10 +157,10 @@ export function PreviewPanel({
     }
   }, [])
 
-  function larguraRenderizada() {
-    return (
-      frameRef.current?.getBoundingClientRect().width ?? prefs.largura ?? LARGURA_INICIAL
-    )
+  function larguraRenderizada(): number {
+    const medida = frameRef.current?.getBoundingClientRect().width
+    if (medida && medida > 0) return Math.min(medida, LARGURA_MAX)
+    return prefs.largura ?? LARGURA_INICIAL
   }
 
   function redimensionar(evento: ReactPointerEvent<HTMLDivElement>) {
