@@ -55,7 +55,7 @@ function AcaoAdicionar({
       className={
         adicionado
           ? undefined
-          : 'bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90'
+          : 'bg-(--vitrine-primary) text-primary-foreground hover:bg-(--vitrine-primary)/90'
       }
       aria-label={
         adicionado

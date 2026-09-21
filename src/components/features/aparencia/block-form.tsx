@@ -183,7 +183,7 @@ function ListaEditor({
               aria-label="Remover imagem"
               onClick={() => atualizar(itens.filter((_, i) => i !== indice))}
             >
-              <X />
+              <X aria-hidden="true" />
             </Button>
           </div>
         ))

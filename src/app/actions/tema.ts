@@ -1,5 +1,3 @@
-"use server"
-
 export type TemaView = {
   paleta: string
   estilo: string

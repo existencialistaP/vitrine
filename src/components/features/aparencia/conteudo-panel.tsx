@@ -1,6 +1,17 @@
 'use client'
 
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Layers3, Lock, Plus, Trash2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  Copy,
+  Eye,
+  EyeOff,
+  Layers3,
+  Lock,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyTitle } from '@/components/ui/empty'
@@ -101,7 +112,13 @@ export function ConteudoPanel({
                   onRemover={() => onRemoverBloco(bloco.id)}
                 />
                 {!ehTablet && selectedId === bloco.id && (
-                  <div className="mt-2 rounded-lg border bg-muted/30 p-3">{formulario}</div>
+                  <div
+                    role="region"
+                    aria-label="Propriedades do bloco"
+                    className="mt-2 rounded-lg border bg-muted/30 p-3"
+                  >
+                    {formulario}
+                  </div>
                 )}
               </li>
             ))}
@@ -129,6 +146,15 @@ export function ConteudoPanel({
       {ehTablet && !ehDesktop && (
         <Sheet open={!!selected} onOpenChange={(aberto) => !aberto && onSelecionarBloco(null)}>
           <SheetContent side="right" className="w-full overflow-y-auto p-4 sm:max-w-md">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-start"
+              onClick={() => onSelecionarBloco(null)}
+            >
+              <ChevronLeft data-icon="inline-start" />
+              Voltar para a lista
+            </Button>
             <SheetTitle>Propriedades do bloco</SheetTitle>
             {formulario}
           </SheetContent>
