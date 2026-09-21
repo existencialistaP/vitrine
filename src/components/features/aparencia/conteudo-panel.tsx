@@ -208,7 +208,7 @@ export function ConteudoPanel({
             </DialogDescription>
           </DialogHeader>
           {blocoEditando && (
-            <div className="max-h-[60vh] overflow-y-auto pr-1">
+            <div className="max-h-[50vh] overflow-y-auto pr-1">
               <BlockForm
                 key={blocoEditando.id}
                 bloco={blocoEditando}
@@ -257,11 +257,11 @@ function ItemBloco({
         selecionado ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'bg-background'
       )}
     >
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         aria-pressed={selecionado}
         onClick={onSelecionar}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="h-auto min-w-0 flex-1 shrink justify-start gap-3 py-1 text-left"
       >
         <span
           className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold"
@@ -275,7 +275,7 @@ function ItemBloco({
             {blockTypeLabel(bloco.type)} · {bloco.visible ? 'Visível' : 'Oculto'}
           </span>
         </span>
-      </button>
+      </Button>
 
       <div className="flex shrink-0 items-center gap-0.5">
         <Button

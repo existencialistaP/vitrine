@@ -211,11 +211,7 @@ export function VitrineEditor({
     const pagina = paginas.find((p) => p.id === paginaId)
     if (!pagina || pagina.blocos.length >= CAPACIDADES.maxBlocks) return null
     const bloco = createBlock(tipo)
-    revisao.current += 1
-    setPaginas((atuais) =>
-      atuais.map((p) => (p.id === paginaId ? { ...p, blocos: [...p.blocos, bloco] } : p))
-    )
-    setSujeira((s) => marcarSujo(s, 'conteudo'))
+    atualizarPagina((p) => ({ ...p, blocos: [...p.blocos, bloco] }))
     setSelectedId(bloco.id)
     return bloco.id
   }
