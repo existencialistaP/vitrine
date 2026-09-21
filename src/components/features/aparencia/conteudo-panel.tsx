@@ -63,14 +63,10 @@ export function ConteudoPanel({
       categorias={base.categorias}
       onChange={(valores) => onAtualizarBloco(selected.id, valores)}
     />
-  ) : (
-    <p className="text-sm text-muted-foreground">
-      Selecione um bloco para editar as propriedades.
-    </p>
-  )
+  ) : null
 
   return (
-    <div className={cn('flex min-h-0 flex-1 flex-col gap-4 lg:flex-row')}>
+    <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
         <div className="flex items-center justify-between rounded-lg border bg-background p-3 text-sm">
           <span className="flex items-center gap-2 font-medium">
@@ -112,12 +108,18 @@ export function ConteudoPanel({
           </ul>
         )}
 
+        {ehDesktop && !selected && paginaAtiva && paginaAtiva.blocos.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Selecione um bloco para editar as propriedades.
+          </p>
+        )}
+
         <Separator />
 
         <CatalogoBlocos advanced={advanced} isSaving={isSaving} onAdicionar={onAdicionarBloco} />
       </div>
 
-      {ehDesktop && (
+      {ehDesktop && selected && (
         <div className="hidden min-h-0 w-80 shrink-0 flex-col overflow-y-auto border-l p-4 lg:flex">
           <h3 className="mb-3 font-heading text-sm font-semibold">Propriedades</h3>
           {formulario}
