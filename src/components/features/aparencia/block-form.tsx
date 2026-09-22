@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
@@ -182,7 +183,7 @@ function ListaEditor({
               aria-label="Remover imagem"
               onClick={() => atualizar(itens.filter((_, i) => i !== indice))}
             >
-              <X />
+              <X aria-hidden="true" />
             </Button>
           </div>
         ))
@@ -248,38 +249,38 @@ function ListaEditor({
 export function BlockForm({
   bloco,
   onChange,
-  onLabelChange,
   produtos,
   categorias,
 }: {
   bloco: BlocoExperiencia
-  onChange: (props: Record<string, unknown>) => void
-  onLabelChange: (label: string) => void
+  onChange: (valores: { label: string } & Record<string, unknown>) => void
   produtos: { id: string; nome: string }[]
   categorias: { id: string; nome: string }[]
 }) {
-  const schema = z.object({
-    label: z.string().min(1, 'Nome é obrigatório'),
-    ...((propSchemas[bloco.type] as z.ZodObject<z.ZodRawShape>).shape),
-  })
+  const schema = useMemo(
+    () =>
+      z.object({
+        label: z.string().min(1, 'Nome é obrigatório'),
+        ...((propSchemas[bloco.type] as z.ZodObject<z.ZodRawShape>).shape),
+      }),
+    [bloco.type]
+  )
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    mode: 'onChange',
+    mode: 'onBlur',
     defaultValues: { label: bloco.label, ...bloco.props },
   })
 
   function propagar() {
     const valores = form.getValues()
     const { label, ...props } = valores
-    onChange(props)
-    onLabelChange(String(label))
+    onChange({ label: String(label), ...props })
   }
 
   const campos = camposPara(bloco.type)
   const lista = edicaoDeLista(bloco.type)
   const errors = form.formState.errors as Record<string, { message?: string; type?: string }>
-  const valido = schema.safeParse(form.watch()).success
 
   return (
     <div className="flex flex-col gap-4">
@@ -355,6 +356,10 @@ export function BlockForm({
                 )}
                 {campo.tipo === 'select' && (
                   <Select
+                    items={campo.opcoes.map((opcao) => ({
+                      value: opcao.valor,
+                      label: opcao.nome,
+                    }))}
                     value={String(field.value ?? '')}
                     onValueChange={(v) => {
                       field.onChange(v)
@@ -386,6 +391,13 @@ export function BlockForm({
                 )}
                 {campo.tipo === 'categorias' && (
                   <Select
+                    items={[
+                      { value: 'todas', label: 'Todas as categorias' },
+                      ...categorias.map((categoria) => ({
+                        value: categoria.id,
+                        label: categoria.nome,
+                      })),
+                    ]}
                     value={typeof field.value === 'string' ? field.value : 'todas'}
                     onValueChange={(v) => {
                       field.onChange(v === 'todas' ? null : v)
@@ -452,10 +464,6 @@ export function BlockForm({
             propagar()
           }}
         />
-      )}
-
-      {!valido && (
-        <FieldError>Revise os campos: há valores inválidos.</FieldError>
       )}
     </div>
   )

@@ -49,6 +49,44 @@ export class PrismaLojaRepository implements LojaRepository {
     return loja;
   }
 
+  async atualizarExperiencia(loja: Loja): Promise<void> {
+    try {
+      const resultado = await this.prisma.loja.updateMany({
+        where: { id: loja.getId().toUUID(), versao: loja.getVersion() ?? 1 },
+        data: {
+          experiencia: loja.getExperiencia().paraJson() as unknown as Prisma.InputJsonValue,
+          versao: { increment: 1 },
+        },
+      });
+      if (resultado.count !== 1) throw new DadosDesatualizados("loja");
+      loja.bumpVersion();
+    } catch (erro) {
+      throw this.mapearErroDePersistencia(erro);
+    }
+  }
+
+  async atualizarTema(loja: Loja): Promise<void> {
+    const tema = loja.getTema();
+    try {
+      const resultado = await this.prisma.loja.updateMany({
+        where: { id: loja.getId().toUUID(), versao: loja.getVersion() ?? 1 },
+        data: {
+          temaPaleta: tema.getPaleta(),
+          temaEstilo: tema.getEstilo(),
+          temaFormatoCard: tema.getFormatoCard(),
+          temaLayout: tema.getLayout(),
+          temaFonte: tema.getFonte(),
+          temaLogoUrl: tema.getLogoUrl()?.getValue() ?? null,
+          versao: { increment: 1 },
+        },
+      });
+      if (resultado.count !== 1) throw new DadosDesatualizados("loja");
+      loja.bumpVersion();
+    } catch (erro) {
+      throw this.mapearErroDePersistencia(erro);
+    }
+  }
+
   async findById(id: LojaId): Promise<Loja | null> {
     const linha = await this.prisma.loja.findUnique({
       where: { id: id.toUUID() },

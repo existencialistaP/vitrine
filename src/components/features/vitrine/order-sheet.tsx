@@ -184,7 +184,7 @@ export function OrderSheet({
           </div>
           {erro && <p className="text-sm text-destructive">{erro}</p>}
           <Button
-            className="w-full bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90"
+            className="w-full bg-(--vitrine-primary) text-primary-foreground hover:bg-(--vitrine-primary)/90"
             onClick={finalizar}
             disabled={itens.length === 0 || isPending}
           >

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { VitrineView } from '@/lib/vitrine-view'
 
@@ -10,15 +10,22 @@ import { VitrineHeader } from './vitrine-header'
 import { estiloTema } from './tema-vitrine'
 import { useCarrinho } from './use-carrinho'
 
-export function Storefront({
+export const Storefront = memo(function Storefront({
   vitrine,
   preview = false,
+  paginaId: paginaIdProp,
+  onTrocarPagina,
 }: {
   vitrine: VitrineView
   preview?: boolean
+  paginaId?: string
+  onTrocarPagina?: (id: string) => void
 }) {
   const [sheetAberto, setSheetAberto] = useState(false)
-  const [paginaId, setPaginaId] = useState(vitrine.paginas[0]?.id ?? '')
+  const [paginaIdInterna, setPaginaIdInterna] = useState(vitrine.paginas[0]?.id ?? '')
+  // No editor, a navegação de páginas é controlada pela barra do editor (RF-5).
+  const paginaControlada = preview && paginaIdProp !== undefined
+  const paginaId = paginaControlada ? paginaIdProp : paginaIdInterna
   const { itens, totalItens, adicionar, alterarQuantidade, limpar, adicionadoId } =
     useCarrinho(vitrine.slug, { habilitado: !preview })
 
@@ -35,11 +42,11 @@ export function Storefront({
         onAbrirPedido={preview ? undefined : () => setSheetAberto(true)}
       />
 
-      {vitrine.paginas.length > 1 && (
+      {vitrine.paginas.length > 1 && !paginaControlada && (
         <div className="sticky top-14 z-30 border-b border-border/60 bg-(--vitrine-bg)/90 backdrop-blur-md">
           <Tabs
             value={paginaId}
-            onValueChange={setPaginaId}
+            onValueChange={onTrocarPagina ?? setPaginaIdInterna}
             className="mx-auto max-w-5xl px-4 sm:px-6"
           >
             <TabsList variant="line" className="h-10 w-full">
@@ -77,4 +84,4 @@ export function Storefront({
       )}
     </div>
   )
-}
+})

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Check, Plus, Store } from 'lucide-react'
 
@@ -54,7 +55,7 @@ function AcaoAdicionar({
       className={
         adicionado
           ? undefined
-          : 'bg-(--vitrine-primary) text-white hover:bg-(--vitrine-primary)/90'
+          : 'bg-(--vitrine-primary) text-primary-foreground hover:bg-(--vitrine-primary)/90'
       }
       aria-label={
         adicionado
@@ -73,7 +74,7 @@ function AcaoAdicionar({
   )
 }
 
-export function ProductCard({
+export const ProductCard = memo(function ProductCard({
   produto,
   onAdicionar,
   href,
@@ -170,4 +171,4 @@ export function ProductCard({
       </CardContent>
     </Card>
   )
-}
+})

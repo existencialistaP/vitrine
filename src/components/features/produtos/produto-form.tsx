@@ -207,6 +207,13 @@ export function ProdutoForm({
                 <FieldLabel htmlFor="categoria">Categoria</FieldLabel>
                 <Select
                   name="categoria"
+                  items={[
+                    { value: '', label: 'Sem categoria' },
+                    ...categorias.map((categoria) => ({
+                      value: categoria.id,
+                      label: categoria.nome,
+                    })),
+                  ]}
                   value={field.value ?? ''}
                   onValueChange={(valor) => field.onChange(valor || null)}
                 >

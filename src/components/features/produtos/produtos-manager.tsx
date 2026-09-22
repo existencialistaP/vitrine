@@ -149,6 +149,13 @@ export function ProdutosManager({
             />
           </InputGroup>
           <Select
+            items={[
+              { value: 'todas', label: 'Todas as categorias' },
+              ...categorias.map((categoria) => ({
+                value: categoria.id,
+                label: categoria.nome,
+              })),
+            ]}
             value={categoriaFiltro}
             onValueChange={(valor) => setCategoriaFiltro(valor ?? 'todas')}
           >

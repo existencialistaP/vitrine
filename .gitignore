@@ -49,6 +49,9 @@ CLAUDE.md
 .agents/
 skills-lock.json
 
+# scratch de agentes (planos, relatórios, brainstorm)
+.superpowers/
+
 # AGENTS.md é versionado — contém as regras de UI do projeto.
 
 # documentos de negócio (não fazem parte do código)

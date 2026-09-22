@@ -160,6 +160,7 @@ export async function alterarTemaAction(input: {
       })
     )
     revalidatePath("/dashboard/aparencia")
+    revalidatePath(`/${loja.getSlug().getValue()}`)
     return { ok: true }
   } catch (erro) {
     return { ok: false, error: mensagemDeErro(erro) }

@@ -27,7 +27,7 @@ export function VitrineHeader({
               className="size-8 rounded-full object-cover"
             />
           ) : (
-            <div className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--vitrine-primary) text-white">
+            <div className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--vitrine-primary) text-primary-foreground">
               <Store className="size-4" aria-hidden="true" />
             </div>
           )}
@@ -46,7 +46,7 @@ export function VitrineHeader({
               <ShoppingBag aria-hidden="true" />
               Pedido
               {totalItens > 0 && (
-                <Badge className="absolute -top-1.5 -right-1.5 size-4 p-0 text-[10px] tabular-nums">
+                <Badge className="absolute -top-1.5 -right-1.5 size-4 p-0 text-xs tabular-nums">
                   {totalItens}
                 </Badge>
               )}
