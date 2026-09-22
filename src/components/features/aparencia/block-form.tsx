@@ -356,6 +356,10 @@ export function BlockForm({
                 )}
                 {campo.tipo === 'select' && (
                   <Select
+                    items={campo.opcoes.map((opcao) => ({
+                      value: opcao.valor,
+                      label: opcao.nome,
+                    }))}
                     value={String(field.value ?? '')}
                     onValueChange={(v) => {
                       field.onChange(v)
@@ -387,6 +391,13 @@ export function BlockForm({
                 )}
                 {campo.tipo === 'categorias' && (
                   <Select
+                    items={[
+                      { value: 'todas', label: 'Todas as categorias' },
+                      ...categorias.map((categoria) => ({
+                        value: categoria.id,
+                        label: categoria.nome,
+                      })),
+                    ]}
                     value={typeof field.value === 'string' ? field.value : 'todas'}
                     onValueChange={(v) => {
                       field.onChange(v === 'todas' ? null : v)

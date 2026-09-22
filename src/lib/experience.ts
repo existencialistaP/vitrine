@@ -104,6 +104,7 @@ export function createBlock(type: BlockType): ExperienceBlock {
 
 export function templates(): { id: string; label: string; description: string; paginas: PaginaExperiencia[] }[] {
   return [
+    { id: 'branco', label: 'Página em branco', description: 'Comece do zero, sem nenhum bloco.', paginas: [{ id: 'branco-1', rotulo: 'Nova página', ordem: 0, blocos: [] }] },
     { id: 'catalog', label: 'Home de catálogo', description: 'Hero, categorias, produtos e CTA.', paginas: initialPages },
     { id: 'sobre', label: 'Sobre nós', description: 'Uma página para história e valores.', paginas: [{ id: 'sobre-1', rotulo: 'Sobre', ordem: 0, blocos: [initialBlocks[0], initialBlocks[3]] }] },
     { id: 'promocao', label: 'Landing promocional', description: 'Banner, coleção filtrada e CTA.', paginas: [{ id: 'promo-1', rotulo: 'Promoção', ordem: 0, blocos: [createBlock('banner'), initialBlocks[2], createBlock('cta')] }] },
